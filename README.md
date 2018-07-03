@@ -1,2 +1,10 @@
 # binance2delta
-Python tool to convert binance .csv files to delta csv file format
+
+Python tool to convert binance transaction .csv files to the csv file format supported by delta.
+
+To convert a csv file in the binance format, simply run binance2delta as following:
+
+```
+binance2delta --format binance --file binance_trades.csv --output delta_trades.csv
+```
+
