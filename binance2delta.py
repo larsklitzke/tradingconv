@@ -124,22 +124,24 @@ class CryptoList(list):
 
         super().__init__()
 
+        self._coin_map = {}
+
         for entry in self.__query_coinmarketcap():
-            self.append(
-                CryptoCurrency(**entry)
-            )
+            c = CryptoCurrency(**entry)
+
+            self.append(c)
+
+            self._coin_map[c.symbol] = c
 
     def find_symbol(self, symbol):
 
-        for c in self:
-            if c.symbol == symbol:
-                return c
+        if symbol not in self._coin_map:
 
-        # symbol not found - check for special cases
-        if symbol == "IOTA":
-            for c in self:
-                if c.symbol == "MIOTA":
-                    return c
+            if symbol == "IOTA":
+                return self._coin_map["MIOTA"]
+
+        else:
+            return self._coin_map[symbol]
 
 
 class Position(object):
@@ -416,18 +418,21 @@ class BinanceParser(TradeHistoryParser):
         # at first, get a list of all available cryptocoins
         coins = CryptoList()
 
-        def __get_currencies(market, symbol):
+        def __get_currencies(other_symbol, symbol):
             if market.startswith(symbol):
                 # start of the string
-                return c, coins.find_symbol(market.replace(symbol, ""))
+                return c, coins.find_symbol(other_symbol)
             elif market.endswith(symbol):
                 # end of the string
-                return coins.find_symbol(market.replace(symbol, "")), c
+                return coins.find_symbol(other_symbol), c
 
         # now check if any of the coins symbol name is in the market
         for c in coins:
-            if market.startswith(c.symbol) or market.endswith(c.symbol):
-                return __get_currencies(market, c.symbol)
+            other_symbol = market.replace(c.symbol, "")
+
+            if coins.find_symbol(other_symbol):
+                # market is valid
+                return __get_currencies(other_symbol, c.symbol)
 
     def __init__(self, **kwargs):
 
@@ -505,6 +510,11 @@ class DeltaParser(TradeHistoryParser):
         _COLUMN_NOTES
     ]
 
+    # A list of currency symbol mappings
+    _CURRENCY_SYMBOL_MAPPING = {
+        "IOTA": "MIOTA"
+    }
+
     def export(self, transaction_list, csv_file):
         with open(csv_file, 'a') as file_:
             writer = csv.writer(file_, **self._cfg)
@@ -516,14 +526,27 @@ class DeltaParser(TradeHistoryParser):
                 row = TradeHistoryParser.Row(self._COLUMNS)
 
                 row[DeltaParser._COLUMN_DATE] = t.datetime
-                row[DeltaParser._COLUMN_TYPE] = t.type
+                row[DeltaParser._COLUMN_TYPE] = t.type.upper()
                 row[DeltaParser._COLUMN_EXCHANGE] = ""
+
                 row[DeltaParser._COLUMN_BASE_AMOUNT] = t.trading_pair[1].amount
-                row[DeltaParser._COLUMN_BASE_CURRENCY] = t.trading_pair[1].currency
+                row[DeltaParser._COLUMN_BASE_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.trading_pair[1].currency,
+                    t.trading_pair[1].currency
+                )
+
                 row[DeltaParser._COLUMN_QUOTA_AMOUNT] = t.trading_pair[0].amount
-                row[DeltaParser._COLUMN_QUOTA_CURRENCY] = t.trading_pair[0].currency
+                row[DeltaParser._COLUMN_QUOTA_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.trading_pair[0].currency,
+                    t.trading_pair[0].currency
+                )
+
                 row[DeltaParser._COLUMN_FEE] = t.fee.amount
-                row[DeltaParser._COLUMN_FEE_CURRENCY] = t.fee.currency
+                row[DeltaParser._COLUMN_FEE_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.fee.currency,
+                    t.fee.currency
+                )
+
                 row[DeltaParser._COLUMN_COSTS] = ""
                 row[DeltaParser._COLUMN_COSTS_CURRENCY] = ""
                 row[DeltaParser._COLUMN_SYNC_HOLDING] = 1
