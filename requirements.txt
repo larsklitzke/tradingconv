@@ -1,0 +1,2 @@
+pkg-resources==0.0.0
+xlrd==1.1.0
