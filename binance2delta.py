@@ -33,7 +33,9 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 import argparse
 import csv
+import datetime
 import json
+import os
 import urllib.request
 
 
@@ -145,7 +147,7 @@ class CryptoList(list):
 
 
 class Position(object):
-
+    """ A position represents a trade amount and its currency. """
     def __init__(self, amount, currency):
         self.__amount = amount
         self.__currency = currency
@@ -160,6 +162,7 @@ class Position(object):
 
 
 class Fee(Position):
+    """ The fee of a transaction """
     pass
 
 
@@ -241,16 +244,16 @@ class Transaction(object):
 class TradeHistoryParser(object):
     class Row(dict):
         """
-        Represents a row in a csv file for reading and writing
+        Represents a row in a file for reading and writing
 
         """
 
         def __init__(self, header, row=None):
             """
-            Initialize a Row object with a row of a csv file and the header of the row
+            Initialize a Row object with a row of tabular calculation file and the header of the row
 
             Args:
-                row:        The row of the csv file (optional)
+                row:        The row of the csv file as a list of values (optional)
                 header:     A header with the names of the columns
             """
 
@@ -260,14 +263,6 @@ class TradeHistoryParser(object):
 
             if row:
                 for idx, column in enumerate(row):
-
-                    # try to convert column value to float
-                    try:
-                        column = float(column.replace(',', '.'))
-                    except ValueError:
-                        # ok this failed - just use the value
-                        pass
-
                     self[header[idx]] = column
 
         def export(self):
@@ -311,19 +306,69 @@ class TradeHistoryParser(object):
         """
         raise NotImplementedError('You have to implement the export() function.')
 
-    def _read_csv_file(self, csv_file):
+    def _read_file(self, file):
         """
-        Get the content of the given `csv_file` as list of rows
+        Get the content of the given `file` as list of rows
 
         Args:
-            csv_file: The csv file to read
+            file: The file to read (either xl(s)x or csv
+
+        Notes:
+            For xlsx files, it is assumed that the trading info is on the first sheet.
 
         Returns:
-            The content of the csv file as a list of rows
+            The content of the file as a list of rows
         """
 
-        with open(csv_file, 'r') as file_:
-            return list(csv.reader(file_, **self._cfg))
+        if file.endswith('.xlsx'):
+            # parse a excel sheet
+            import xlrd
+
+            # open the workbook
+            wb = xlrd.open_workbook(file)
+
+            # get the first sheet in the book
+            sheet = wb.sheet_by_index(0)
+
+            # convert cells to python types
+            file_rows = [
+                [c.value for c in row]
+                for row in sheet.get_rows()
+            ]
+
+        elif file.endswith('.csv'):
+
+            with open(file, 'r') as file_:
+
+                file_rows = list(csv.reader(file_, **self._cfg))
+        else:
+            raise NotImplementedError(
+                'The file format {} is currently not supported.'.format(os.path.splitext(file)[1]))
+
+        if file_rows:
+
+            result = []
+
+            for row in file_rows:
+
+                # a list for the new row with python datatypes
+                row_ = []
+                for col in row:
+
+                    try:
+                        row_.append(float(col))
+                    except ValueError:
+
+                        # try to parse as datetime
+                        try:
+                            row_.append(datetime.datetime.strptime(col, "%Y-%m-%d %H:%M:%S"))
+                        except ValueError:
+                            row_.append(col)
+
+                # append the row to the result
+                result.append(row_)
+
+            return result
 
     def __init__(self, **kwargs):
 
@@ -371,7 +416,7 @@ class BinanceParser(TradeHistoryParser):
 
     def parse(self, csv_file):
 
-        csv_content = self._read_csv_file(csv_file)
+        csv_content = self._read_file(csv_file)
 
         # the first line is the header of the csv columns
         header = csv_content[0]
@@ -428,11 +473,11 @@ class BinanceParser(TradeHistoryParser):
 
         # now check if any of the coins symbol name is in the market
         for c in coins:
-            other_symbol = market.replace(c.symbol, "")
+            second_symbol = market.replace(c.symbol, "")
 
-            if coins.find_symbol(other_symbol):
+            if coins.find_symbol(second_symbol):
                 # market is valid
-                return __get_currencies(other_symbol, c.symbol)
+                return __get_currencies(second_symbol, c.symbol)
 
     def __init__(self, **kwargs):
 
@@ -525,34 +570,38 @@ class DeltaParser(TradeHistoryParser):
             for t in transaction_list:
                 row = TradeHistoryParser.Row(self._COLUMNS)
 
-                row[DeltaParser._COLUMN_DATE] = t.datetime
-                row[DeltaParser._COLUMN_TYPE] = t.type.upper()
-                row[DeltaParser._COLUMN_EXCHANGE] = ""
+                values = {
+                    DeltaParser._COLUMN_DATE: t.datetime,
+                    DeltaParser._COLUMN_TYPE: t.type.upper(),
+                    DeltaParser._COLUMN_EXCHANGE: "",
 
-                row[DeltaParser._COLUMN_BASE_AMOUNT] = t.trading_pair[1].amount
-                row[DeltaParser._COLUMN_BASE_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
-                    t.trading_pair[1].currency,
-                    t.trading_pair[1].currency
-                )
+                    DeltaParser._COLUMN_BASE_AMOUNT: t.trading_pair[1].amount,
+                    DeltaParser._COLUMN_BASE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                        t.trading_pair[1].currency,
+                        t.trading_pair[1].currency
+                    ),
 
-                row[DeltaParser._COLUMN_QUOTA_AMOUNT] = t.trading_pair[0].amount
-                row[DeltaParser._COLUMN_QUOTA_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
-                    t.trading_pair[0].currency,
-                    t.trading_pair[0].currency
-                )
+                    DeltaParser._COLUMN_QUOTA_AMOUNT: t.trading_pair[0].amount,
+                    DeltaParser._COLUMN_QUOTA_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                        t.trading_pair[0].currency,
+                        t.trading_pair[0].currency
+                    ),
 
-                row[DeltaParser._COLUMN_FEE] = t.fee.amount
-                row[DeltaParser._COLUMN_FEE_CURRENCY] = self._CURRENCY_SYMBOL_MAPPING.get(
-                    t.fee.currency,
-                    t.fee.currency
-                )
+                    DeltaParser._COLUMN_FEE: t.fee.amount,
+                    DeltaParser._COLUMN_FEE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                        t.fee.currency,
+                        t.fee.currency
+                    ),
 
-                row[DeltaParser._COLUMN_COSTS] = ""
-                row[DeltaParser._COLUMN_COSTS_CURRENCY] = ""
-                row[DeltaParser._COLUMN_SYNC_HOLDING] = 1
-                row[DeltaParser._COLUMN_SENT_RECEIVED_FROM] = ""
-                row[DeltaParser._COLUMN_SENT_TO] = ""
-                row[DeltaParser._COLUMN_NOTES] = ""
+                    DeltaParser._COLUMN_COSTS: "",
+                    DeltaParser._COLUMN_COSTS_CURRENCY: "",
+                    DeltaParser._COLUMN_SYNC_HOLDING: 1,
+                    DeltaParser._COLUMN_SENT_RECEIVED_FROM: "",
+                    DeltaParser._COLUMN_SENT_TO: "",
+                    DeltaParser._COLUMN_NOTES: "",
+                }
+
+                row.update(values)
 
                 writer.writerow(row.export())
 
