@@ -125,7 +125,7 @@ class DeltaParser(TradeHistoryParser):
                 values = {
                     DeltaParser._COLUMN_DATE: t.datetime,
                     DeltaParser._COLUMN_TYPE: t.type.upper(),
-                    DeltaParser._COLUMN_EXCHANGE: "",
+                    DeltaParser._COLUMN_EXCHANGE: t.exchange,
 
                     DeltaParser._COLUMN_BASE_AMOUNT: t.trading_pair[1].amount,
                     DeltaParser._COLUMN_BASE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(

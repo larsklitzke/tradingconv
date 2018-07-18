@@ -236,3 +236,27 @@ class Transaction(object):
                           str(self.price),
                           str(self.fee.amount),
                           self.fee.currency])
+
+
+class CryptoTransaction(Transaction):
+    """
+    A transaction which took place on a certain exchange, e.g. Binance.
+    """
+
+    def __init__(self, exchange, **kwargs):
+        """
+
+        Args:
+            exchange: The exchange on which the transaction took place
+
+        Keyword Args:
+            Will be passed to the `Transaction` parent class.
+
+        """
+        super().__init__(**kwargs)
+
+        self._exchange = exchange
+
+    @property
+    def exchange(self):
+        return self._exchange
