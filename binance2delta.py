@@ -33,7 +33,7 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 import argparse
 
-from parser.binance import BinanceParser
+from parser.binance import BinanceParser, BinanceCrawlerParser
 from parser.delta import DeltaParser
 
 _PARSER = {
@@ -48,6 +48,13 @@ _PARSER = {
         'parser': DeltaParser,
         'config': {
             'delimiter': ',',
+        }
+    },
+
+    'binancecrawler': {
+        'parser': BinanceCrawlerParser,
+        'config': {
+            'delimiter': ';',
         }
     }
 }
