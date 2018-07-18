@@ -31,8 +31,10 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
+import datetime
+
 from parser.parser import TradeHistoryParser, ParserOutdatedError
-from transaction import CryptoList, Transaction, Position, Fee
+from transaction import CryptoList, Position, Fee, CryptoTransaction
 
 
 def _market_to_trading_pair(market):
@@ -126,14 +128,97 @@ class BinanceParser(TradeHistoryParser):
 
             base, quota = _market_to_trading_pair(row_[self._COLUMN_MARKET])
 
+            # old binance files had different way to store datetimes which will not be converted
+            # by the xlsx module by default. Thus, we have to check this manually.
+            if not isinstance(row_.get(self._COLUMN_DATE), datetime.datetime):
+                row_[self._COLUMN_DATE] = datetime.datetime.strptime(row_[self._COLUMN_DATE], "%d.%m.%y %H:%M")
+
             # convert the row to a transaction
-            transactions.append(Transaction(
+            transactions.append(CryptoTransaction(
                 datetime=row_[self._COLUMN_DATE],
                 trading_pair=(Position(amount=row_[self._COLUMN_TOTAL], currency=quota),
                               Position(amount=row_[self._COLUMN_COIN_AMOUNT], currency=base)),
                 trading_type=row_[self._COLUMN_TYPE],
                 price=row_[self._COLUMN_PRICE],
-                fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN])
+                fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN]),
+                exchange="Binance"
+            ))
+
+        return transactions
+
+    def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
+
+class BinanceCrawlerParser(TradeHistoryParser):
+    """
+    Parses csv files created by the binanceCrawler.
+
+    """
+
+    _COLUMN_TIME = 'time'
+    _COLUMN_SIDE = 'side'
+    _COLUMN_TRADEID = 'tradeId'
+    _COLUMN_QUANTITY = 'qty'
+    _COLUMN_FEE_COIN = 'feeAsset'
+    _COLUMN_SYMBOL = 'symbol'
+    _COLUMN_TOTAL_QUOTA = 'totalQuota'
+    _COLUMN_REALPnl = 'realPnl'
+    _COLUMN_QUOTE_ASSET = 'quoteAsset'
+    _COLUMN_BASE_ASSET = 'baseAsset'
+    _COLUMN_ID = 'id'
+    _COLUMN_FEE = 'fee'
+    _COLUMN_PRICE = 'price'
+    _COLUMN_ACTIVE_BUY = 'activeBuy'
+
+    _COLUMNS = [
+        _COLUMN_TIME,
+        _COLUMN_SIDE,
+        _COLUMN_TRADEID,
+        _COLUMN_QUANTITY,
+        _COLUMN_FEE_COIN,
+        _COLUMN_SYMBOL,
+        _COLUMN_TOTAL_QUOTA,
+        _COLUMN_REALPnl,
+        _COLUMN_QUOTE_ASSET,
+        _COLUMN_BASE_ASSET,
+        _COLUMN_ID,
+        _COLUMN_FEE,
+        _COLUMN_PRICE,
+        _COLUMN_ACTIVE_BUY,
+    ]
+
+    def parse(self, csv_file):
+
+        csv_content = self._read_file(csv_file)
+
+        # the first line is the header of the csv columns
+        header = csv_content[0]
+        del csv_content[0]
+
+        # check if each entry in the header is in our list
+        for c in header:
+            if c not in BinanceCrawlerParser._COLUMNS:
+                # otherwise, rise an exception that the parser is out of date
+                raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
+
+        transactions = []
+
+        # parse all other rows
+        for row in csv_content:
+            row_ = TradeHistoryParser.Row(row=row, header=header)
+
+            base, quota = _market_to_trading_pair(row_[self._COLUMN_SYMBOL])
+
+            transactions.append(CryptoTransaction(
+                datetime=datetime.datetime.utcfromtimestamp(row_[self._COLUMN_TIME] / 1000),
+                trading_pair=(Position(amount=row_[self._COLUMN_TOTAL_QUOTA], currency=quota),
+                              Position(amount=row_[self._COLUMN_QUANTITY], currency=base)),
+                trading_type=row_[self._COLUMN_SIDE],
+                price=row_[self._COLUMN_PRICE],
+                fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN]),
+                exchange="Binance"
             ))
 
         return transactions
