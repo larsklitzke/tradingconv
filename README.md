@@ -11,7 +11,7 @@ This package comes equipped with multiple tools. Here is a list of currently ava
 
 | Command          |  Description                                                 |
 | -----------------| -------------------------------------------------------------|
-| binancecrawler   | Query Binance to export the **full** transaction history   |
+| binancecrawler   | Query Binance to export the **full** trade history   |
 | binance2delta    | Convert supported (csv,xlsx) files into the delta csv format |
 
 
@@ -19,7 +19,7 @@ This package comes equipped with multiple tools. Here is a list of currently ava
 ## Query Binance
 
 Despite using the official API of Binance which limits the trade history to the last three month, 
-`binancecrawler` is able to retrieve and export the **full** transaction history.
+`binancecrawler` is able to retrieve and export the **full** trade history.
 
 Therefore, `binancecrawler` requires the session cookies of an active Binance connection on the current machine. 
 The parameter `--cookies` should therefore point to a file containing a string with the cookies. 
