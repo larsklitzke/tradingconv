@@ -40,7 +40,7 @@ I've setup a list of links with a description on how to do this for different br
 * [Firefox](https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector#storage-tree)
 
 
-![Warning](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/warning.svg)
+![Warning](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/warning.png)
 
 To the best of my knowledge, the following cookies are currently required in order to gain access to the active
 session:
