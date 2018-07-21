@@ -5,6 +5,14 @@ to generate .csv files which can be imported into the trading application [delta
 No need to generate an API key and expose it to third-party applications. Supports export of the 
 **full** trading history.
 
+## Installation
+
+This package is hosted on [PyPI](https://pypi.org/project/binance2delta/) so just install `binance2delta` with
+
+```
+pip install binance2delta
+```
+
 ## Comands
 
 This package comes equipped with multiple tools. Here is a list of currently available tools.
@@ -62,7 +70,7 @@ Finally, we need an additional csrftoken Binance uses for internal queries. You 
 your account page, open the development console of you browser (the one where you've copied the cookies from) and search
 for an entry `getUserLoginLog.html`. You'll find the csrftoken in the header of the message.
 
-![Image for retrieving the csrftoken](doc/csrftoken_readout.jpg)
+![Image for retrieving the csrftoken](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/csrftoken_readout.jpg)
 
 ### Retrieve trade history
 
