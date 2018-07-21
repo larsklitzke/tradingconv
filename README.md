@@ -55,7 +55,7 @@ var:=<variable>=<value>;
 With ``<value>`` as the value of the variable. A line thus looks like:
 
 ```
-_ga=<value>;sensorsdata2015jssdkcross=<value> ...
+_ga=<value>;JSESSIONID=<value>;__BINANCE_USER_DEVICE_ID__<value>
 ```
 
 Finally, we need an additional csrftoken Binance uses for internal queries. You can read this token out by switching to 
