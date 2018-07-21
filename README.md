@@ -70,7 +70,7 @@ Finally, we need an additional csrftoken Binance uses for internal queries. You 
 your account page, open the development console of you browser (the one where you've copied the cookies from) and search
 for an entry `getUserLoginLog.html`. You'll find the csrftoken in the header of the message.
 
-![Image for retrieving the csrftoken](https://github.com/larsklitzke/binance2delta/blob/master/doc/csrftoken_readout.jpg)
+![Image for retrieving the csrftoken](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/csrftoken_readout.jpg)
 
 ### Retrieve trade history
 
