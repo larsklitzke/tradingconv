@@ -80,7 +80,19 @@ class BinanceConnection(object):
             self._cookies[name] = value.strip()
 
     def _get_trade_page(self, page, start, end, symbol=None, type=None):
+        """
+        Retrieve the page `page` of all `Transaction`s between `start` and `end`.
 
+        Args:
+            page (int|str):             The page number
+            start (datetime.datetime):  The start date
+            end (datetime.datetime):    Date of last transaction
+            symbol (str):               The symbol to query, e.g. ETH, ADA, etc.
+            type (str):                 The type of transaction; 'BUY' or 'SELL'
+
+        Returns:
+
+        """
         post_data = {
             'start': int(start.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()) * 1000,
             'end': int(end.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()) * 1000,
@@ -109,6 +121,20 @@ class BinanceConnection(object):
         return result['pages'], result['data']
 
     def trades(self, start, end, **kwargs):
+        """
+        Get all trades between `start` and `end`
+
+        Args:
+            start (datetime.datetime):   The start date
+            end (datetime.datetime):     Date of last transaction
+            **kwargs:
+                symbol (str):   The symbol to query, e.g. ETH, ADA, etc.
+                type (str):     The type of transaction; 'BUY' or 'SELL'
+
+        Returns:
+            list: A list of `Transaction`s
+
+        """
         # get the first trade page
         pages, trades = self._get_trade_page(1, start, end, **kwargs)
 
