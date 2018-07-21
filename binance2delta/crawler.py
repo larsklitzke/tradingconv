@@ -1,36 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2017 by Lars Klitzke, Lars.Klitzke@gmail.com
-# All Rights Reserved.
+# Copyright (c) 2016-2018 by Lars Klitzke, Lars.Klitzke@gmail.com
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#
-#    * Redistributions in binary form must reproduce the above
-#      copyright notice, this list of conditions and the following
-#      disclaimer in the documentation and/or other materials provided
-#      with the distribution.
-#
-#    * Names of its contributors may be used to endorse or promote
-#      products derived from this software without specific prior
-#      written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 import argparse
 import datetime
 import json
@@ -39,16 +19,16 @@ import requests
 
 
 def parse_arguments():
-    '''Parses the arguments the user passed to this script '''
+    """Parses the arguments the user passed to this script """
 
     # parse parameter
-    arg_parser = argparse.ArgumentParser(description='''
+    arg_parser = argparse.ArgumentParser(description="""
             BinanceCrawler can be used to retrieve detailed trading information of the cryptocurrency ploatform
             Binance without being restricted by the API provided by Binance. 
             
             This tool circumvent the trade history restriction of Binance, due to which only the trade history 
             of the last three month can be exported.  
-            ''')
+            """)
 
     arg_parser.add_argument('--cookies', help='A file containing the cookies for a Binance session.', required=True)
 
@@ -129,7 +109,6 @@ class BinanceConnection(object):
         return result['pages'], result['data']
 
     def trades(self, start, end, **kwargs):
-
         # get the first trade page
         pages, trades = self._get_trade_page(1, start, end, **kwargs)
 
