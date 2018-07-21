@@ -7,7 +7,7 @@ No need to generate an API key and expose it to third-party applications. Suppor
 
 ## Comands
 
-This package comes equipped with multiple tools. Here is a list of available commands.
+This package comes equipped with multiple tools. Here is a list of currently available tools.
 
 | Command          |  Description                                                 |
 | -----------------| -------------------------------------------------------------|
@@ -99,8 +99,8 @@ binance2delta --format binancecrawler --file full_trade_file.csv --output delta_
 
 
 ## Thanks
-If you like this tool, donate some bugs for a drink at the ETH-Wallet *0xbbf40ba9f8de33061ebd9eecafc0c4b2081ad14f*
-or via [PayPal](https://www.paypal.me/LarsKlitzke). Cheers!
+If you like this tool, donate some bugs 💸 for a drink or two at the ETH-Wallet *0xbbf40ba9f8de33061ebd9eecafc0c4b2081ad14f*
+or via [PayPal](https://www.paypal.me/LarsKlitzke). Cheers 🍻!
 
 ## License
 
