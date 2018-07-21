@@ -21,7 +21,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = '1.2.2'
+__version__ = '1.0.1'
 
 setuptools.setup(
     name='binance2delta',
@@ -42,7 +42,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'binance2delta = binance2delta.convert:main',
-            'binanceCrawler = binance2delta.crawler:main'
+            'binancecrawler = binance2delta.crawler:main'
         ]
     },
     packages=setuptools.find_packages(),
