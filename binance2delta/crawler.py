@@ -91,6 +91,7 @@ class BinanceConnection(object):
             type (str):                 The type of transaction; 'BUY' or 'SELL'
 
         Returns:
+            tuple[int, dict]:           A tuple with the number of pages and the data of the specified page
 
         """
         post_data = {
@@ -117,6 +118,8 @@ class BinanceConnection(object):
         )
 
         result = json.loads(r.text)
+
+        # convert result to transaction
 
         return result['pages'], result['data']
 

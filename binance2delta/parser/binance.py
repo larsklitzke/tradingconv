@@ -35,7 +35,7 @@ import datetime
 
 from transaction import CryptoList, Position, Fee, CryptoTransaction
 
-from parser.parser import TradeHistoryParser, ParserOutdatedError
+from binance2delta.parser.parser import TradeHistoryParser, ParserOutdatedError
 
 
 def _market_to_trading_pair(market):

@@ -33,7 +33,7 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 import csv
 
-from parser.parser import TradeHistoryParser
+from binance2delta.parser.parser import TradeHistoryParser
 
 
 class DeltaParser(TradeHistoryParser):
