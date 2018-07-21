@@ -184,25 +184,41 @@ class BinanceCrawlerParser(TradeHistoryParser):
                 # otherwise, rise an exception that the parser is out of date
                 raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
 
-        transactions = []
+        return [self.convert(row, header) for row in csv_content]
 
-        # parse all other rows
-        for row in csv_content:
-            row_ = TradeHistoryParser.Row(row=row, header=header)
+    @classmethod
+    def convert(cls, row, header):
+        """
+        Converts the given `row` into a `Transaction`
 
-            base, quota = _market_to_trading_pair(row_[self._COLUMN_SYMBOL])
+        Args:
+            row (list):     The row as a list of values
+            header (list):  Description of each row entry
 
-            transactions.append(CryptoTransaction(
-                datetime=datetime.datetime.utcfromtimestamp(row_[self._COLUMN_TIME] / 1000),
-                trading_pair=(Position(amount=row_[self._COLUMN_TOTAL_QUOTA], currency=quota),
-                              Position(amount=row_[self._COLUMN_QUANTITY], currency=base)),
-                trading_type=row_[self._COLUMN_SIDE],
-                price=row_[self._COLUMN_PRICE],
-                fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN]),
-                exchange="Binance"
-            ))
+        Notes:
+            The list lengths of row and header have to equal.
 
-        return transactions
+        Returns:
+            CryptoTransaction:  The row converted into a CryptoTransaction
+
+        """
+        assert (len(row) == ĺen(header)), 'Each column must have an entry in the header!'
+        assert isinstance(row, list), 'The row should be a list'
+        assert isinstance(header, list), 'The header should be list'
+
+        row_ = TradeHistoryParser.Row(row=row, header=header)
+
+        base, quota = _market_to_trading_pair(row_[BinanceCrawlerParser._COLUMN_SYMBOL])
+
+        return CryptoTransaction(
+            datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerParser._COLUMN_TIME] / 1000),
+            trading_pair=(Position(amount=row_[BinanceCrawlerParser._COLUMN_TOTAL_QUOTA], currency=quota),
+                          Position(amount=row_[BinanceCrawlerParser._COLUMN_QUANTITY], currency=base)),
+            trading_type=row_[BinanceCrawlerParser._COLUMN_SIDE],
+            price=row_[BinanceCrawlerParser._COLUMN_PRICE],
+            fee=Fee(row_[BinanceCrawlerParser._COLUMN_FEE], row_[BinanceCrawlerParser._COLUMN_FEE_COIN]),
+            exchange="Binance"
+        )
 
     def __init__(self, **kwargs):
 
