@@ -170,7 +170,6 @@ def main(arguments):
     trades = conn.trades(
         start=start_date,
         end=end_date,
-        debug=True
     )
 
     # now write to the csv file
