@@ -39,10 +39,8 @@ I've setup a list of links with a description on how to do this for different br
 * [Chrome](https://developers.google.com/web/tools/chrome-devtools/manage-data/cookies)
 * [Firefox](https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector#storage-tree)
 
-<aside class="warning">
-Do not expose the Cookies to the public and remove the files afterwards!
-</aside>
 
+![Warning](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/warning.svg)
 
 To the best of my knowledge, the following cookies are currently required in order to gain access to the active
 session:
