@@ -46,7 +46,6 @@ To the best of my knowledge, the following cookies are currently required in ord
 session:
 
 * _ga
-* sensorsdata2015jssdkcross
 * JSESSIONID
 * \_\_BINANCE_USER_DEVICE_ID\_\_
 
