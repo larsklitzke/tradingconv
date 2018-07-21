@@ -119,8 +119,6 @@ class BinanceConnection(object):
 
         result = json.loads(r.text)
 
-        # convert result to transaction
-
         return result['pages'], result['data']
 
     def trades(self, start, end, **kwargs):
