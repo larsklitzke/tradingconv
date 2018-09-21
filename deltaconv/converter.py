@@ -14,8 +14,9 @@
 
 import argparse
 
-from binance2delta.parser.binance import BinanceParser, BinanceCrawlerParser
-from binance2delta.parser.delta import DeltaParser
+from deltaconv.parser.binance import BinanceParser, BinanceCrawlerParser
+from deltaconv.parser.bitpanda import BitpandaParser
+from deltaconv.parser.delta import DeltaParser
 
 _PARSER = {
     'binance': {
@@ -36,6 +37,13 @@ _PARSER = {
         'parser': BinanceCrawlerParser,
         'config': {
             'delimiter': ';',
+        }
+    },
+
+    'bitpanda': {
+        'parser': BitpandaParser,
+        'config': {
+            'delimiter': ','
         }
     }
 }

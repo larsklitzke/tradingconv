@@ -21,12 +21,12 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 
 setuptools.setup(
-    name='binance2delta',
+    name='deltaconv',
     version=__version__,
-    description='Package with tools to query Binance and to generate csv files for import transactions into delta.',
+    description='Package with tools to generate/convert csv files for importing transactions into Delta.',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Lars Klitzke',
@@ -41,8 +41,8 @@ setuptools.setup(
     ),
     entry_points={
         'console_scripts': [
-            'binance2delta = binance2delta.convert:main',
-            'binancecrawler = binance2delta.crawler:main'
+            'deltaconv = deltaconv.convert:main',
+            'binancecrawler = deltaconv.crawler:main'
         ]
     },
     packages=setuptools.find_packages(),

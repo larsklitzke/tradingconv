@@ -14,7 +14,7 @@
 
 import datetime
 
-from binance2delta.transaction import CryptoList, Position, Fee, CryptoTransaction, ParserOutdatedError
+from deltaconv.transaction import CryptoList, Position, Fee, CryptoTransaction, ParserOutdatedError
 from .parser import TradeHistoryParser
 
 
