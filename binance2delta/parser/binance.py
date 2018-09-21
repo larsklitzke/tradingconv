@@ -97,7 +97,7 @@ class BinanceParser(TradeHistoryParser):
 
         # check if each entry in the header is in our list
         for c in header:
-            if c not in BinanceParser._COLUMNS:
+            if c not in self._COLUMNS:
                 # otherwise, rise an exception that the parser is out of date
                 raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
 
@@ -126,10 +126,6 @@ class BinanceParser(TradeHistoryParser):
             ))
 
         return transactions
-
-    def __init__(self, **kwargs):
-
-        super().__init__(**kwargs)
 
 
 class BinanceCrawlerParser(TradeHistoryParser):
