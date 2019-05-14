@@ -154,6 +154,52 @@ class TradeHistoryParser(object):
 
             return result
 
+    def _write_transactions(self, transactions, file):
+        """
+        Write the transactions into the given file
+
+        Args:
+            transactions (list[dict]): A list of transaction entries as dicts.
+            file: The file to write (either xl(s)x or csv
+
+        Notes:
+            For xlsx files, it is assumed that the trading info is on the first sheet.
+
+        """
+        if transactions:
+
+            if file.endswith('.xlsx'):
+                # parse a excel sheet
+                import xlwt
+
+                # create a new workbook
+                wb = xlwt.Workbook()
+
+                # and a sheet
+                sheet = wb.add_sheet('sheet1')
+
+                # write the header
+                for c, head in enumerate(transactions[0].keys()):
+                    sheet.write(0, c, head)
+
+                # write all values
+                for row, transaction in enumerate(transactions):
+                    for col, value in enumerate(transaction.values()):
+                        sheet.write(row + 1, col, value)
+
+                wb.save(file)
+
+            elif file.endswith('.csv'):
+
+                with open(file, mode='w') as file_:
+
+                    writer = csv.DictWriter(file_, fieldnames=transactions[0].keys(), **self._cfg)
+
+                    writer.writerows(transactions)
+            else:
+                raise NotImplementedError(
+                    'The file format {} is currently not supported.'.format(os.path.splitext(file)[1]))
+
     def __init__(self, **kwargs):
 
         super().__init__()
