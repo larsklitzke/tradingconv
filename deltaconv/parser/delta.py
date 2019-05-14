@@ -17,9 +17,6 @@ from .parser import TradeHistoryParser
 
 class DeltaParser(TradeHistoryParser):
 
-    def parse(self, csv_file):
-        super().parse(csv_file=csv_file)
-
     # This field contains the date and time of the transaction, including the timezone.
     _COLUMN_DATE = "Date"
 

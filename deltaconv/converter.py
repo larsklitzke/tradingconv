@@ -16,14 +16,14 @@ import argparse
 import logging
 import sys
 
-from deltaconv.parser.binance import BinanceParser, BinanceCrawlerParser
+from deltaconv.parser.binance import BinanceTradeParser, BinanceCrawlerParser
 from deltaconv.parser.bitpanda import BitpandaParser
 from deltaconv.parser.delta import DeltaParser
 from deltaconv.parser.parser import ParserOutdatedError
 
 PARSER = {
     'binance': {
-        'parser': BinanceParser,
+        'parser': BinanceTradeParser,
         'config': {
             'delimiter': ",",
         }

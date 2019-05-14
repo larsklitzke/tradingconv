@@ -49,7 +49,7 @@ def _market_to_trading_pair(market):
             return __get_currencies(second_symbol, c.symbol)
 
 
-class BinanceParser(TradeHistoryParser):
+class BinanceTradeParser(TradeHistoryParser):
     """
     Parses csv files of the Binance exchange platform.
 
