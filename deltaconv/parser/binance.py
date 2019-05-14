@@ -11,11 +11,10 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
 import datetime
 
-from deltaconv.transaction import CryptoList, Position, Fee, CryptoTransaction, ParserOutdatedError
-from .parser import TradeHistoryParser
+from deltaconv.transaction import CryptoList, Position, Fee, CryptoTransaction
+from .parser import TradeHistoryParser, ParserOutdatedError
 
 
 def _market_to_trading_pair(market):
@@ -127,6 +126,41 @@ class BinanceParser(TradeHistoryParser):
 
         return transactions
 
+    def export(self, transaction_list, csv_file):
+        """
+        Write the list of `CryptoTransaction` into the given `csv_file`.
+
+        Args:
+            transaction_list (list[CryptoTransaction]): A list of `Transaction`s.
+            csv_file (str): The path for the csv file.
+        """
+
+        transactions = []
+
+        transaction_list = sorted(transaction_list, key=lambda t: t.datetime)
+
+        for t in transaction_list:
+            row = TradeHistoryParser.Row(self._COLUMNS)
+
+            values = {
+                self._COLUMN_DATE: t.datetime.strftime("%Y-%m-%d %H-%M-%S"),
+
+                self._COLUMN_MARKET: "{}{}".format(t.trading_pair[1].currency.upper(),
+                                                   t.trading_pair[0].currency),
+                self._COLUMN_TYPE: t.type.upper(),
+                self._COLUMN_PRICE: t.price,
+                self._COLUMN_COIN_AMOUNT: t.trading_pair[1].amount,
+                self._COLUMN_TOTAL: t.price * t.trading_pair[1].amount,
+                self._COLUMN_FEE: t.fee.amount,
+                self._COLUMN_FEE_COIN: t.fee.currency.upper()
+            }
+
+            row.update(values)
+
+            transactions.append(values)
+
+        self._write_transactions(transactions, "{}.xlsx".format(csv_file))
+
 
 class BinanceCrawlerParser(TradeHistoryParser):
     """
@@ -174,11 +208,16 @@ class BinanceCrawlerParser(TradeHistoryParser):
         header = csv_content[0]
         del csv_content[0]
 
-        # check if each entry in the header is in our list
-        for c in header:
-            if c not in BinanceCrawlerParser._COLUMNS:
-                # otherwise, rise an exception that the parser is out of date
-                raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
+        missing_columns = list(set(self._COLUMNS) - set(header))
+        if missing_columns:
+            #
+            #
+            # # check if each entry in the header is in our list
+            # for c in header:
+            #     if c not in BinanceCrawlerParser._COLUMNS:
+            # otherwise, rise an exception that the parser is out of date
+            raise ParserOutdatedError(
+                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
 
         return [self.convert(row, header) for row in csv_content]
 
@@ -198,13 +237,13 @@ class BinanceCrawlerParser(TradeHistoryParser):
             CryptoTransaction:  The row converted into a CryptoTransaction
 
         """
-        assert (len(row) == ĺen(header)), 'Each column must have an entry in the header!'
+        assert len(row) == len(header), 'Each column must have an entry in the header!'
         assert isinstance(row, list), 'The row should be a list'
         assert isinstance(header, list), 'The header should be list'
 
         row_ = TradeHistoryParser.Row(row=row, header=header)
 
-        base, quota = _market_to_trading_pair(row_[BinanceCrawlerParser._COLUMN_SYMBOL])
+        base, quota = row_[cls._COLUMN_BASE_ASSET], row_[cls._COLUMN_QUOTE_ASSET]
 
         return CryptoTransaction(
             datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerParser._COLUMN_TIME] / 1000),
