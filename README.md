@@ -35,7 +35,7 @@ Despite using the official API of Binance which limits the trade history to the 
 
 Therefore, `binancecrawler` requires the session cookies of an active Binance connection on the current machine. 
 The parameter `--cookies` should therefore point to a file containing a string with the cookies. 
-)
+
 ### Save Binance session
 In order to retrieve the Cookies of an active Binance session, log in into Binance and export the Cookies.
 I've setup a list of links with a description on how to do this for different browser.
