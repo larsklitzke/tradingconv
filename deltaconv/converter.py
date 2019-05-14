@@ -67,7 +67,7 @@ def parse_arguments():
 
     arg_parser.add_argument('--format', help="The output transaction format.", required=True, choices=PARSER.keys())
 
-    arg_parser.add_argument('--output', help="The name of the file to save the transactions into with extension.",
+    arg_parser.add_argument('--output', help="The name of the file to save the transactions into without extension.",
                             required=False, default=None)
 
     return arg_parser.parse_args()
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     transaction_list = []
     parser = None
 
+    logging.info('Try to parse the file %s', arguments.file)
     for name in PARSER:
         try:
             parser = init_parser(name)
@@ -116,6 +117,10 @@ if __name__ == "__main__":
         logging.error('The format of the given file is currently not supported.')
 
     else:
+        logging.info('Parsing was successful.')
+        logging.info('Export %d transactions to %s.', len(transaction_list), arguments.output)
         parser = init_parser(arguments.format)
 
         parser.export(transaction_list, arguments.output)
+
+        logging.info('Finished - will exit gracefully.')
