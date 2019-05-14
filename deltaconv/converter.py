@@ -13,12 +13,14 @@
 # GNU General Public License for more details.
 
 import argparse
+import logging
 
 from deltaconv.parser.binance import BinanceParser, BinanceCrawlerParser
 from deltaconv.parser.bitpanda import BitpandaParser
 from deltaconv.parser.delta import DeltaParser
+from deltaconv.parser.parser import ParserOutdatedError
 
-_PARSER = {
+PARSER = {
     'binance': {
         'parser': BinanceParser,
         'config': {
@@ -48,33 +50,36 @@ _PARSER = {
     }
 }
 
+# The list of available csv file exporter
+EXPORTER = {name: PARSER[name] for name in ['binance', 'delta']}
+
 
 def parse_arguments():
     """Parses the arguments the user passed to this script """
 
     # parse parameter
     arg_parser = argparse.ArgumentParser(description='''
-            This tool parses a CSV file formatted in Binance format to a CSV file with the Delta format in order to 
-            import Binance transactions into the Delta application.
-            ''')
+            This tool parses a range of CSV|XLSX files into other CSV|XLSX file formats, e.g. Delta, Bitpanda or 
+            Binance.''')
 
     arg_parser.add_argument('--file', help="The csv file", required=True)
 
-    arg_parser.add_argument('--format', help="The format of the input csv file", required=True, choices=_PARSER.keys())
+    arg_parser.add_argument('--format', help="The output transaction format.", required=True, choices=PARSER.keys())
 
-    arg_parser.add_argument('--output', help="The name of the CSV file with delta format", required=False, default=None)
+    arg_parser.add_argument('--output', help="The name of the file to save the transactions into with extension.",
+                            required=False, default=None)
 
     return arg_parser.parse_args()
 
 
 def init_parser(source_format):
-    """ Initialize a Parser pased on the given source format
+    """ Initialize a Parser based on the given source format
 
     Args:
         source_format: The format of the source file, e.g. binance.
     """
 
-    choice = _PARSER[source_format]
+    choice = PARSER[source_format]
 
     return choice['parser'](**choice['config'])
 
@@ -82,10 +87,23 @@ def init_parser(source_format):
 if __name__ == "__main__":
     arguments = parse_arguments()
 
-    parser = init_parser(arguments.format)
+    transaction_list = []
+    parser = None
 
-    transaction_list = parser.parse(arguments.file)
+    for name in PARSER:
+        try:
+            parser = init_parser(name)
 
-    delta_parser = init_parser("delta")
+            transaction_list = parser.parse(arguments.file)
 
-    delta_parser.export(transaction_list=transaction_list, csv_file=arguments.output)
+            break
+        except (ParserOutdatedError, NotImplementedError):
+            pass
+
+    if not transaction_list:
+        logging.error('The format of the given file is currently not supported.')
+
+    else:
+        parser = init_parser(arguments.format)
+
+        parser.export(transaction_list, arguments.output)
