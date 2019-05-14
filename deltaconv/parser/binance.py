@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2018 by Lars Klitzke, Lars.Klitzke@gmail.com
+# Copyright (c) 2016-2019 by Lars Klitzke, Lars.Klitzke@gmail.com
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -367,16 +367,6 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
             status=row_[cls._COLUMN_STATUS],
             exchange="Binance",
         )
-
-        # return CryptoTransaction(
-        #     datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerTradeParser._COLUMN_TIME] / 1000),
-        #     trading_pair=(Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_TOTAL_QUOTA], currency=quota),
-        #                   Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_QUANTITY], currency=base)),
-        #     trading_type=row_[BinanceCrawlerTradeParser._COLUMN_SIDE],
-        #     price=row_[BinanceCrawlerTradeParser._COLUMN_PRICE],
-        #     fee=Fee(row_[BinanceCrawlerTradeParser._COLUMN_FEE], row_[BinanceCrawlerTradeParser._COLUMN_FEE_COIN]),
-        #     exchange="Binance"
-        # )
 
 
 class BinanceCrawlerTradeParser(TradeHistoryParser):

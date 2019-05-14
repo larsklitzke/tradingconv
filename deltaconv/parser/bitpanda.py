@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2018 by Lars Klitzke, Lars.Klitzke@gmail.com
+# Copyright (c) 2016-2019 by Lars Klitzke, Lars.Klitzke@gmail.com
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
