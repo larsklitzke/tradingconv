@@ -12,8 +12,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import csv
-
 from .parser import TradeHistoryParser
 
 
@@ -94,46 +92,45 @@ class DeltaParser(TradeHistoryParser):
     }
 
     def export(self, transaction_list, csv_file):
-        with open(csv_file, 'a') as file_:
-            writer = csv.writer(file_, **self._cfg)
+        transactions = []
 
-            # write the header
-            writer.writerow(self._COLUMNS)
+        for t in transaction_list:
+            row = TradeHistoryParser.Row(self._COLUMNS)
 
-            for t in transaction_list:
-                row = TradeHistoryParser.Row(self._COLUMNS)
+            values = {
+                DeltaParser._COLUMN_DATE: t.datetime,
+                DeltaParser._COLUMN_TYPE: t.type.upper(),
+                DeltaParser._COLUMN_EXCHANGE: t.exchange,
 
-                values = {
-                    DeltaParser._COLUMN_DATE: t.datetime,
-                    DeltaParser._COLUMN_TYPE: t.type.upper(),
-                    DeltaParser._COLUMN_EXCHANGE: t.exchange,
+                DeltaParser._COLUMN_BASE_AMOUNT: t.trading_pair[1].amount,
+                DeltaParser._COLUMN_BASE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.trading_pair[1].currency,
+                    t.trading_pair[1].currency
+                ),
 
-                    DeltaParser._COLUMN_BASE_AMOUNT: t.trading_pair[1].amount,
-                    DeltaParser._COLUMN_BASE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
-                        t.trading_pair[1].currency,
-                        t.trading_pair[1].currency
-                    ),
+                DeltaParser._COLUMN_QUOTA_AMOUNT: t.trading_pair[0].amount,
+                DeltaParser._COLUMN_QUOTA_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.trading_pair[0].currency,
+                    t.trading_pair[0].currency
+                ),
 
-                    DeltaParser._COLUMN_QUOTA_AMOUNT: t.trading_pair[0].amount,
-                    DeltaParser._COLUMN_QUOTA_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
-                        t.trading_pair[0].currency,
-                        t.trading_pair[0].currency
-                    ),
+                DeltaParser._COLUMN_FEE: t.fee.amount,
+                DeltaParser._COLUMN_FEE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
+                    t.fee.currency,
+                    t.fee.currency
+                ),
 
-                    DeltaParser._COLUMN_FEE: t.fee.amount,
-                    DeltaParser._COLUMN_FEE_CURRENCY: self._CURRENCY_SYMBOL_MAPPING.get(
-                        t.fee.currency,
-                        t.fee.currency
-                    ),
+                DeltaParser._COLUMN_COSTS: "",
+                DeltaParser._COLUMN_COSTS_CURRENCY: "",
+                DeltaParser._COLUMN_SYNC_HOLDING: 1,
+                DeltaParser._COLUMN_SENT_RECEIVED_FROM: "",
+                DeltaParser._COLUMN_SENT_TO: "",
+                DeltaParser._COLUMN_NOTES: "",
+            }
 
-                    DeltaParser._COLUMN_COSTS: "",
-                    DeltaParser._COLUMN_COSTS_CURRENCY: "",
-                    DeltaParser._COLUMN_SYNC_HOLDING: 1,
-                    DeltaParser._COLUMN_SENT_RECEIVED_FROM: "",
-                    DeltaParser._COLUMN_SENT_TO: "",
-                    DeltaParser._COLUMN_NOTES: "",
-                }
+            row.update(values)
 
-                row.update(values)
+            transactions.append(row)
 
-                writer.writerow(row.export())
+        self._write_transactions(transactions, csv_file)
+        # writer.writerow(row.export())
