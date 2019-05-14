@@ -14,6 +14,8 @@
 import argparse
 import datetime
 import json
+import logging
+import sys
 
 import requests
 
@@ -23,12 +25,11 @@ def parse_arguments():
 
     # parse parameter
     arg_parser = argparse.ArgumentParser(description="""
-            BinanceCrawler can be used to retrieve detailed trading information of the cryptocurrency ploatform
+            BinanceCrawler can be used to retrieve detailed trading information of the cryptocurrency platform
             Binance without being restricted by the API provided by Binance. 
             
             This tool circumvent the trade history restriction of Binance, due to which only the trade history 
-            of the last three month can be exported.  
-            """)
+            for a three month interval can be exported.""")
 
     arg_parser.add_argument('--cookies', help='A file containing the cookies for a Binance session.', required=True)
 
@@ -46,10 +47,11 @@ def parse_arguments():
 
 
 class BinanceConnection(object):
+
     # Restricts the number of trades returned per request
     # We are currently sending multiple small requests
     # instead of one huge one to not stress Binance website.
-    _MAX_TRADE_QUERY_COUNT = 20
+    _MAX_TRADE_QUERY_COUNT = 1000
 
     def __init__(self, csrftoken, cookies):
         super().__init__()
@@ -79,9 +81,9 @@ class BinanceConnection(object):
 
             self._cookies[name] = value.strip()
 
-    def _get_trade_page(self, page, start, end, symbol=None, type=None):
+    def _get_trades(self, start, end, symbol=None, type=None):
         """
-        Retrieve the page `page` of all `Transaction`s between `start` and `end`.
+        Retrieve the trades between `start` and `end`.
 
         Args:
             page (int|str):             The page number
@@ -94,10 +96,12 @@ class BinanceConnection(object):
             tuple[int, dict]:           A tuple with the number of pages and the data of the specified page
 
         """
+
+        logging.info('Get trades from %s to %s', start, end)
+
         post_data = {
-            'start': int(start.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()) * 1000,
-            'end': int(end.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()) * 1000,
-            'page': page,
+            'start': int(start.timestamp()) * 1000,
+            'end': int(end.timestamp()) * 1000,
 
             # take care of choosing this value - binance may reach out to you if you
             # set this value too high :P
@@ -136,13 +140,28 @@ class BinanceConnection(object):
             list: A list of `Transaction`s
 
         """
-        # get the first trade page
-        pages, trades = self._get_trade_page(1, start, end, **kwargs)
 
-        for page in range(2, pages + 1):
-            _, result = self._get_trade_page(page, start, end, **kwargs)
+        # since Binance only allows to retrieve three month in one query, we have to split up the request
+        start_interval = start.replace(second=0, minute=0, hour=0, microsecond=0)
+
+        # use 28 days to be save for all month
+        end_interval = start_interval + datetime.timedelta(days=28)
+
+        trades = []
+
+        while end_interval < end:
+            _, result = self._get_trades(start_interval, end_interval, **kwargs)
 
             trades.extend(result)
+
+            start_interval = end_interval
+            end_interval = start_interval + datetime.timedelta(days=28)
+
+        # handle the last query since the interval should always overlap the full trading interval
+
+        _, result = self._get_trades(start_interval, end, **kwargs)
+
+        trades.extend(result)
 
         return trades
 
@@ -188,5 +207,16 @@ def main(arguments):
 
 if __name__ == '__main__':
     args = parse_arguments()
+
+    formatter = logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    screenhandler = logging.StreamHandler(stream=sys.stdout)
+    screenhandler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(
+        screenhandler
+    )
 
     main(args)
