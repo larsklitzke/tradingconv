@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2018 by Lars Klitzke, Lars.Klitzke@gmail.com
+# Copyright (c) 2016-2019 by Lars Klitzke, Lars.Klitzke@gmail.com
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,14 +16,22 @@ import argparse
 import logging
 import sys
 
-from deltaconv.parser.binance import BinanceTradeParser, BinanceCrawlerParser
+from deltaconv.parser.binance import BinanceTradeParser, BinanceCrawlerTradeParser, BinanceCrawlerDepositParser, \
+    BinanceDepositParser
 from deltaconv.parser.bitpanda import BitpandaParser
 from deltaconv.parser.delta import DeltaParser
 from deltaconv.parser.parser import ParserOutdatedError
 
 PARSER = {
-    'binance': {
+    'binance-trades': {
         'parser': BinanceTradeParser,
+        'config': {
+            'delimiter': ",",
+        }
+    },
+
+    'binance-deposit': {
+        'parser': BinanceDepositParser,
         'config': {
             'delimiter': ",",
         }
@@ -36,8 +44,15 @@ PARSER = {
         }
     },
 
-    'binancecrawler': {
-        'parser': BinanceCrawlerParser,
+    'binancecrawler-trades': {
+        'parser': BinanceCrawlerTradeParser,
+        'config': {
+            'delimiter': ';',
+        }
+    },
+
+    'binancecrawler-deposit': {
+        'parser': BinanceCrawlerDepositParser,
         'config': {
             'delimiter': ';',
         }
@@ -52,7 +67,7 @@ PARSER = {
 }
 
 # The list of available csv file exporter
-EXPORTER = {name: PARSER[name] for name in ['binance', 'delta']}
+# EXPORTER = {name: PARSER[name] for name in ['binance', 'delta']}
 
 
 def parse_arguments():
