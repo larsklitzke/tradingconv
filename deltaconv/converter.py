@@ -14,6 +14,7 @@
 
 import argparse
 import logging
+import sys
 
 from deltaconv.parser.binance import BinanceParser, BinanceCrawlerParser
 from deltaconv.parser.bitpanda import BitpandaParser
@@ -86,6 +87,17 @@ def init_parser(source_format):
 
 if __name__ == "__main__":
     arguments = parse_arguments()
+
+    formatter = logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    screenhandler = logging.StreamHandler(stream=sys.stdout)
+    screenhandler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(
+        screenhandler
+    )
 
     transaction_list = []
     parser = None
