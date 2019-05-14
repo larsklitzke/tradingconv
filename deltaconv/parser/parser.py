@@ -201,7 +201,7 @@ class TradeHistoryParser(object):
                 with open(file, mode='w') as file_:
 
                     writer = csv.DictWriter(file_, fieldnames=transactions[0].keys(), **self._cfg)
-
+                    writer.writeheader()
                     writer.writerows(transactions)
             else:
                 raise NotImplementedError(
