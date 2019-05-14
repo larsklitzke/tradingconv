@@ -15,13 +15,6 @@ import json
 import urllib.request
 
 
-class ParserOutdatedError(RuntimeError):
-    """ Raise this exception if a TradingParser is out of date.
-
-    """
-    pass
-
-
 class Currency(object):
     """
     This is a generic class for representing a currency,
@@ -131,10 +124,24 @@ class Position(object):
 
     @property
     def amount(self):
+        """
+        The position amount
+
+        Returns:
+            float: The position amount
+
+        """
         return self.__amount
 
     @property
     def currency(self):
+        """
+        The position currency.
+
+        Returns:
+            str: The name of the currency.
+
+        """
         return self.__currency
 
 
@@ -154,7 +161,7 @@ class Transaction(object):
         The date and time of the transaction
 
         Returns:
-            The datetime of the transaction
+            datetime.datetime: The datetime of the transaction
 
         """
         return self.__datetime
@@ -165,7 +172,7 @@ class Transaction(object):
         A pair of currencies representing the trading direction
 
         Returns:
-            A tuple with two element which are
+            tuple[Position, Position]: A tuple with two positions
 
         """
         return self.__trading_pairs
@@ -176,27 +183,41 @@ class Transaction(object):
         The trading type
 
         Returns:
-            The type of trading
+            str: The type of trading
         """
         return self.__trading_type
 
     @property
     def price(self):
+        """
+        The price per coin.
+
+        Returns:
+            float: The price of a coin.
+
+        """
         return self.__price
 
     @property
     def fee(self):
+        """
+        The trading fee
+
+        Returns:
+            Fee: The trading fee
+
+        """
         return self.__fee
 
     def __init__(self, datetime, trading_pair, trading_type, price, fee):
         """
 
         Args:
-            datetime:           The trading time
-            trading_pair:       A tuple of the source and target trading currency
-            trading_type:       The type of the trade
-            price:              The price per coin
-            fee:                Amount of trading fee of type `Fee`
+            datetime (datetime):                        The trading time
+            trading_pair (tuple[Position, Position]):   A tuple of the source and target trading currency
+            trading_type (str):                         The type of the trade
+            price (float):                              The price per coin
+            fee (Fee):                                  Amount of trading fee
         """
 
         super().__init__()
@@ -239,4 +260,11 @@ class CryptoTransaction(Transaction):
 
     @property
     def exchange(self):
+        """
+        The name of the exchange.
+
+        Returns:
+            str: The name of the exchange
+
+        """
         return self._exchange
