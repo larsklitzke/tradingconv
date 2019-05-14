@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 import datetime
 
-from deltaconv.transaction import CryptoList, Position, Fee, CryptoTransaction
+from deltaconv.transaction import CryptoList, Position, Fee, CryptoTransaction, Deposit
 from .parser import TradeHistoryParser, ParserOutdatedError
 
 
@@ -143,7 +143,7 @@ class BinanceTradeParser(TradeHistoryParser):
             row = TradeHistoryParser.Row(self._COLUMNS)
 
             values = {
-                self._COLUMN_DATE: t.datetime.strftime("%Y-%m-%d %H-%M-%S"),
+                self._COLUMN_DATE: t.datetime.strftime("%Y-%m-%d %H:%M:%S"),
 
                 self._COLUMN_MARKET: "{}{}".format(t.trading_pair[1].currency.upper(),
                                                    t.trading_pair[0].currency),
@@ -159,10 +159,227 @@ class BinanceTradeParser(TradeHistoryParser):
 
             transactions.append(values)
 
-        self._write_transactions(transactions, "{}.xlsx".format(csv_file))
+        self._write_transactions(transactions=transactions, columns=self._COLUMNS, file="{}.xlsx".format(csv_file))
 
 
-class BinanceCrawlerParser(TradeHistoryParser):
+class BinanceDepositParser(TradeHistoryParser):
+    """
+    Parses deposit files of the Binance exchange platform.
+
+    """
+
+    _COLUMN_DATE = "Date"
+
+    _COLUMN_COIN = "Coin"
+
+    _COLUMN_AMOUNT = "Amount"
+
+    _COLUMN_TRANSACTIONFEE = "TransactionFee"
+
+    _COLUMN_ADDRESS = "Address"
+
+    _COLUMN_TXID = "TXID"
+
+    _COLUMN_SOURCE_ADDRESS = "Source Address"
+
+    _COLUMN_PAYMENT_ID = "PaymentID"
+
+    _COLUMN_STATUS = "Status"
+
+    _COLUMNS = [
+        _COLUMN_DATE,
+        _COLUMN_COIN,
+        _COLUMN_AMOUNT,
+        _COLUMN_TRANSACTIONFEE,
+        _COLUMN_ADDRESS,
+        _COLUMN_TXID,
+        _COLUMN_SOURCE_ADDRESS,
+        _COLUMN_PAYMENT_ID,
+        _COLUMN_STATUS
+    ]
+
+    def parse(self, file):
+
+        content = self._read_file(file)
+
+        # the first line is the header of the csv columns
+        header = content[0]
+        del content[0]
+
+        # check if each entry in the header is in our list
+        for c in header:
+            if c not in self._COLUMNS:
+                # otherwise, rise an exception that the parser is out of date
+                raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
+
+        deposits = []
+
+        # parse all other rows
+        for row in content:
+            row_ = TradeHistoryParser.Row(row=row, header=header)
+
+            d = Deposit(
+                timestamp=row_[self._COLUMN_DATE],
+                address=row_[self._COLUMN_ADDRESS],
+                txid=row_[self._COLUMN_TXID],
+                coin=row_[self._COLUMN_COIN],
+                amount=row_[self._COLUMN_AMOUNT],
+                fee=Fee(amount=row_[self._COLUMN_TRANSACTIONFEE], currency=""),
+                status=row_[self._COLUMN_STATUS],
+                exchange="Binance",
+            )
+
+            deposits.append(d)
+
+        return deposits
+
+    def export(self, deposits, file):
+        """
+        Write the list of `Deposit` into the given `file`.
+
+        Args:
+            deposits (list[Deposit]): A list of `Deposit`s.
+            file (str): The path for the file
+        """
+
+        transactions = []
+
+        deposits = sorted(deposits, key=lambda d: d.timestamp)
+
+        for d in deposits:
+            row = TradeHistoryParser.Row(self._COLUMNS)
+
+            values = {
+                self._COLUMN_DATE: d.timestamp.strftime("%Y-%m-%d %H-%M-%S"),
+
+                self._COLUMN_COIN: d.currency,
+                self._COLUMN_AMOUNT: d.amount,
+                self._COLUMN_TRANSACTIONFEE: d.transactionfee.amount,
+                self._COLUMN_ADDRESS: d.address,
+                self._COLUMN_TXID: d.txid,
+                self._COLUMN_SOURCE_ADDRESS: "",
+                self._COLUMN_PAYMENT_ID: "",
+                self._COLUMN_STATUS: d.status
+            }
+
+            row.update(values)
+
+            transactions.append(values)
+
+        self._write_transactions(transactions, "{}.xlsx".format(file))
+
+
+class BinanceCrawlerDepositParser(TradeHistoryParser):
+    """
+    Parses deposits from the BinanceCrawler.
+
+    """
+
+    _COLUMN_TXID = "txId"
+    _COLUMN_DIRECTION = "direction"
+    _COLUMN_COIN = "coin"
+    _COLUMN_CURRENT_CONFIRM_TIMES = "curConfirmTimes"
+    _COLUMN_STATUS = "status"
+    _COLUMN_ID = "id"
+    _COLUMN_CONFIRM_TIMES = "confirmTimes"
+    _COLUMN_ASSET_LABEL = "assetLabel"
+    _COLUMN_USER_ID = "userId"
+    _COLUMN_ADDRESS = "address"
+    _COLUMN_AMOUNT_TRANSFER = "transferAmount"
+    _COLUMN_URL = "url"
+    _COLUMN_ADDRESS_URL = "addressUrl"
+    _COLUMN_INFO = "info"
+    _COLUMN_ADDRESS_TAG = "addressTag"
+    _COLUMN_APPLY_TIME = "applyTime"
+    _COLUMN_STATUS_NAME = "statusName"
+    _COLUMN_DIRECTION_NAME = "directionName"
+    _COLUMN_APPLY_TIME_STR = "applyTimeStr"
+    _COLUMN_TRANSACTION_FEE = "transactionFee"
+
+    _COLUMNS = [
+        _COLUMN_TXID,
+        _COLUMN_DIRECTION,
+        _COLUMN_COIN,
+        _COLUMN_CURRENT_CONFIRM_TIMES,
+        _COLUMN_STATUS,
+        _COLUMN_ID,
+        _COLUMN_CONFIRM_TIMES,
+        _COLUMN_ASSET_LABEL,
+        _COLUMN_USER_ID,
+        _COLUMN_ADDRESS,
+        _COLUMN_AMOUNT_TRANSFER,
+        _COLUMN_URL,
+        _COLUMN_ADDRESS_URL,
+        _COLUMN_INFO,
+        _COLUMN_ADDRESS_TAG,
+        _COLUMN_APPLY_TIME,
+        _COLUMN_STATUS_NAME,
+        _COLUMN_DIRECTION_NAME,
+        _COLUMN_APPLY_TIME_STR,
+        _COLUMN_TRANSACTION_FEE,
+    ]
+
+    def parse(self, csv_file):
+        csv_content = self._read_file(csv_file)
+
+        # the first line is the header of the csv columns
+        header = csv_content[0]
+        del csv_content[0]
+
+        missing_columns = list(set(self._COLUMNS) - set(header))
+        if missing_columns:
+            # check if each entry in the header is in our list
+            # otherwise, rise an exception that the parser is out of date
+            raise ParserOutdatedError(
+                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
+
+        return [self.convert(row, header) for row in csv_content]
+
+    @classmethod
+    def convert(cls, row, header):
+        """
+        Converts the given `row` into a `Transaction`
+
+        Args:
+            row (list):     The row as a list of values
+            header (list):  Description of each row entry
+
+        Notes:
+            The list lengths of row and header have to equal.
+
+        Returns:
+            CryptoTransaction:  The row converted into a CryptoTransaction
+
+        """
+        assert len(row) == len(header), 'Each column must have an entry in the header!'
+        assert isinstance(row, list), 'The row should be a list'
+        assert isinstance(header, list), 'The header should be list'
+
+        row_ = TradeHistoryParser.Row(row=row, header=header)
+
+        return Deposit(
+            timestamp=datetime.datetime.utcfromtimestamp(row_[cls._COLUMN_APPLY_TIME]),
+            address=row_[cls._COLUMN_ADDRESS],
+            txid=row_[cls._COLUMN_TXID],
+            coin=row_[cls._COLUMN_COIN],
+            amount=row_[cls._COLUMN_AMOUNT_TRANSFER],
+            fee=Fee(amount=row_[cls._COLUMN_TRANSACTION_FEE], currency=""),
+            status=row_[cls._COLUMN_STATUS],
+            exchange="Binance",
+        )
+
+        # return CryptoTransaction(
+        #     datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerTradeParser._COLUMN_TIME] / 1000),
+        #     trading_pair=(Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_TOTAL_QUOTA], currency=quota),
+        #                   Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_QUANTITY], currency=base)),
+        #     trading_type=row_[BinanceCrawlerTradeParser._COLUMN_SIDE],
+        #     price=row_[BinanceCrawlerTradeParser._COLUMN_PRICE],
+        #     fee=Fee(row_[BinanceCrawlerTradeParser._COLUMN_FEE], row_[BinanceCrawlerTradeParser._COLUMN_FEE_COIN]),
+        #     exchange="Binance"
+        # )
+
+
+class BinanceCrawlerTradeParser(TradeHistoryParser):
     """
     Parses csv files created by the binanceCrawler.
 
@@ -201,7 +418,6 @@ class BinanceCrawlerParser(TradeHistoryParser):
     ]
 
     def parse(self, csv_file):
-
         csv_content = self._read_file(csv_file)
 
         # the first line is the header of the csv columns
@@ -214,7 +430,7 @@ class BinanceCrawlerParser(TradeHistoryParser):
             #
             # # check if each entry in the header is in our list
             # for c in header:
-            #     if c not in BinanceCrawlerParser._COLUMNS:
+            #     if c not in BinanceCrawlerTradeParser._COLUMNS:
             # otherwise, rise an exception that the parser is out of date
             raise ParserOutdatedError(
                 'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
@@ -246,15 +462,11 @@ class BinanceCrawlerParser(TradeHistoryParser):
         base, quota = row_[cls._COLUMN_BASE_ASSET], row_[cls._COLUMN_QUOTE_ASSET]
 
         return CryptoTransaction(
-            datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerParser._COLUMN_TIME] / 1000),
-            trading_pair=(Position(amount=row_[BinanceCrawlerParser._COLUMN_TOTAL_QUOTA], currency=quota),
-                          Position(amount=row_[BinanceCrawlerParser._COLUMN_QUANTITY], currency=base)),
-            trading_type=row_[BinanceCrawlerParser._COLUMN_SIDE],
-            price=row_[BinanceCrawlerParser._COLUMN_PRICE],
-            fee=Fee(row_[BinanceCrawlerParser._COLUMN_FEE], row_[BinanceCrawlerParser._COLUMN_FEE_COIN]),
+            datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerTradeParser._COLUMN_TIME] / 1000),
+            trading_pair=(Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_TOTAL_QUOTA], currency=quota),
+                          Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_QUANTITY], currency=base)),
+            trading_type=row_[BinanceCrawlerTradeParser._COLUMN_SIDE],
+            price=row_[BinanceCrawlerTradeParser._COLUMN_PRICE],
+            fee=Fee(row_[BinanceCrawlerTradeParser._COLUMN_FEE], row_[BinanceCrawlerTradeParser._COLUMN_FEE_COIN]),
             exchange="Binance"
         )
-
-    def __init__(self, **kwargs):
-
-        super().__init__(**kwargs)
