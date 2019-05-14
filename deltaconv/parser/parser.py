@@ -161,7 +161,7 @@ class TradeHistoryParser(object):
 
             return result
 
-    def _write_transactions(self, transactions, file):
+    def _write_transactions(self, columns, transactions, file):
         """
         Write the transactions into the given file
 
@@ -186,13 +186,13 @@ class TradeHistoryParser(object):
                 sheet = wb.add_sheet('sheet1')
 
                 # write the header
-                for c, head in enumerate(transactions[0].keys()):
+                for c, head in enumerate(columns):
                     sheet.write(0, c, head)
 
                 # write all values
                 for row, transaction in enumerate(transactions):
-                    for col, value in enumerate(transaction.values()):
-                        sheet.write(row + 1, col, value)
+                    for col, value in enumerate(columns):
+                        sheet.write(row + 1, col, transaction[value])
 
                 wb.save(file)
 
@@ -202,7 +202,14 @@ class TradeHistoryParser(object):
 
                     writer = csv.DictWriter(file_, fieldnames=transactions[0].keys(), **self._cfg)
                     writer.writeheader()
-                    writer.writerows(transactions)
+
+                    for t in transactions:
+
+                        for key, value in t.items():
+                            if isinstance(value, float):
+                                t[key] = "{:f}".format(value)
+
+                        writer.writerow(t)
             else:
                 raise NotImplementedError(
                     'The file format {} is currently not supported.'.format(os.path.splitext(file)[1]))
