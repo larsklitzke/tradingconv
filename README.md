@@ -1,26 +1,30 @@
-# binance2delta
+# tradingconv
 
-This package contains tools to retrieve information of the cryptocurrency exchange [Binance](https://www.binance.com/)
-to generate .csv files which can be imported into the trading application [delta](https://www.producthunt.com/posts/delta). 
-No need to generate an API key and expose it to third-party applications. Supports export of the 
-**full** trading history.
+Are you trading with Cryptocurrencies on [Binance](https://www.binance.com/)? Do you need a tool to manage the different file formats platforms 
+like Binance uses for exporting the trading history, e.g. to import into tax return software or for tracking your 
+portfolie in [delta](https://www.producthunt.com/posts/delta)? 
+
+This package provide the appropriate tools for handling different formats of trading history files. Furthermore, the 
+Binance API limitation that allows to only export trading history in an three month interval is lifted so that you can
+export your **full** trading history. No need to generate an API key and expose it to third-party applications. Just 
+use you local login session.
 
 ## Installation
 
-This package is hosted on [PyPI](https://pypi.org/project/binance2delta/) so just install `binance2delta` with
+This package is hosted on [PyPI](https://pypi.org/project/tradingconv/) so just install `tradingconv` with
 
 ```
-pip install binance2delta
+pip install tradingconv
 ```
 
-## Comands
+## Commands
 
 This package comes equipped with multiple tools. Here is a list of currently available tools.
 
 | Command          |  Description                                                 |
 | -----------------| -------------------------------------------------------------|
 | binancecrawler   | Query Binance to export the **full** trade history   |
-| binance2delta    | Convert supported (csv,xlsx) files into the delta csv format |
+| tradingconv      | Convert supported (csv,xlsx) files into other supported formats |
 
 
 
@@ -45,7 +49,6 @@ I've setup a list of links with a description on how to do this for different br
 To the best of my knowledge, the following cookies are currently required in order to gain access to the active
 session:
 
-* _ga
 * JSESSIONID
 * \_\_BINANCE_USER_DEVICE_ID\_\_
 
@@ -54,13 +57,13 @@ Save all of theses variables into a file with only one line in the following for
 ```
 line:=<var>+ <EOL>
 var:=<variable>=<value>;
-<variable> = "_ga" | "JSESSIONID" | "__BINANCE_USER_DEVICE_ID__ "
+<variable> = "JSESSIONID" | "__BINANCE_USER_DEVICE_ID__ "
 ```
 
 With ``<value>`` as the value of the variable. A line thus looks like:
 
 ```
-_ga=<value>;JSESSIONID=<value>;__BINANCE_USER_DEVICE_ID__<value>
+JSESSIONID=<value>;__BINANCE_USER_DEVICE_ID__<value>
 ```
 
 Finally, we need an additional csrftoken Binance uses for internal queries. You can read this token out by switching to 
@@ -83,23 +86,27 @@ or simply the full history by passing a start some time ago your account creatio
 binancecrawler --cookies <cookie_file> --token <csrftoken> --start "2000-01-01 00:00:00" --output full_trade_file.csv
 ```
 
-## Convert to delta format
+## Convert to other formats
 
-To finally convert csv or xlxs files created either using Binance export function or 
-`binancecrawler` to the delta csv format, `binance2delta` does the trick.
+To finally convert csv or xlxs files to the other csv or xlsx format, `tradingconv` does the trick.
 
-Currently, the following source formatter are supported:
+The following source formats are supported:
 
-* binance: By using the export function on the Binance website
+* bitpanda: From the export function of the Bitpanda website
+* binance: From the export function on the Binance website
 * binancecrawler: The csv file created by `binancecrawler`
+
+The following output formats are supported:
+
+* binance: The xlsx format used by Binance.
+* delta: The csv file format used by Delta.
 
 More formats may supported in the future.
 
-
-So, to convert the full trade history exported by `binancecrawler` simply call:
+So, to convert the full trade history exported by `binancecrawler` to the delta format, simply call:
 
 ```
-binance2delta --format binancecrawler --file full_trade_file.csv --output delta_trades.csv
+tradingconv --format delta --file full_trade_file.csv --output delta_trades.csv
 ```
 
 

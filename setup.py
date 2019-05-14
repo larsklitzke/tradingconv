@@ -24,9 +24,10 @@ with open("README.md", "r") as fh:
 __version__ = '1.3.0'
 
 setuptools.setup(
-    name='deltaconv',
+    name='tradingconv',
     version=__version__,
-    description='Package with tools to generate/convert csv files for importing transactions into Delta.',
+    description='Package with tools to generate/convert csv|xlsx files for importing transactions into Delta or tax '
+                'return software.',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Lars Klitzke',
@@ -41,7 +42,7 @@ setuptools.setup(
     ),
     entry_points={
         'console_scripts': [
-            'deltaconv = deltaconv.convert:main',
+            'tradingconv = deltaconv.convert:main',
             'binancecrawler = deltaconv.crawler:main'
         ]
     },
