@@ -287,6 +287,16 @@ class BinanceConnection(object):
         return trades
 
     def deposits(self, **kwargs):
+        """
+        Get all deposits.
+
+        Args:
+            **kwargs:
+
+        Returns:
+            list[dict[str:any]]: A list transactions
+
+        """
 
         logging.info('Get all deposits')
 
@@ -296,6 +306,16 @@ class BinanceConnection(object):
         return result
 
     def withdrawals(self, **kwargs):
+        """
+        Get all withdrawals.
+
+        Args:
+            **kwargs:
+
+        Returns:
+            list[dict[str:any]]: A list transactions
+
+        """
 
         logging.info('Get all withdrawals')
 
