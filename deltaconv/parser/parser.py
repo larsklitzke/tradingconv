@@ -26,6 +26,7 @@ class ParserOutdatedError(RuntimeError):
 
 
 class TradeHistoryParser(object):
+
     class Row(dict):
         """
         Represents a row in a file for reading and writing
@@ -63,29 +64,35 @@ class TradeHistoryParser(object):
 
             return row
 
-    def parse(self, csv_file):
+    def __init__(self, **kwargs):
+
+        super().__init__()
+
+        self._cfg = kwargs
+
+    def parse(self, file):
         """
-        Parses the given csv_file
+        Parses the given file
 
         Args:
-            csv_file:
+            file (str): The path to the file.
 
         Returns:
-            A list of `Transaction`s
+            list[Transaction]: A list of `Transaction`s
 
         """
         raise NotImplementedError('You have to implement the parser() function.')
 
-    def export(self, transaction_list, csv_file):
+    def export(self, transaction_list, file):
         """
-        Exports the list of transactions as a CSV file with the binance format
+        Exports the list of transactions into a file.
 
         Args:
-            transaction_list: A list of transactions
-            csv_file: The name of the file to export the transactions into
+            transaction_list (list[Transaction]): A list of transactions
+            file (str): The path of the file to export the transactions into
 
         Notes:
-            If the `csv_file` already exists, the content will be overwritten!
+            If the `file` already exists, the content will be overwritten!
 
         """
         raise NotImplementedError('You have to implement the export() function.')
@@ -200,8 +207,4 @@ class TradeHistoryParser(object):
                 raise NotImplementedError(
                     'The file format {} is currently not supported.'.format(os.path.splitext(file)[1]))
 
-    def __init__(self, **kwargs):
 
-        super().__init__()
-
-        self._cfg = kwargs
