@@ -208,11 +208,16 @@ class BinanceCrawlerParser(TradeHistoryParser):
         header = csv_content[0]
         del csv_content[0]
 
-        # check if each entry in the header is in our list
-        for c in header:
-            if c not in BinanceCrawlerParser._COLUMNS:
-                # otherwise, rise an exception that the parser is out of date
-                raise ParserOutdatedError('The column {} is unknown. The parser has to be updated!'.format(c))
+        missing_columns = list(set(self._COLUMNS) - set(header))
+        if missing_columns:
+            #
+            #
+            # # check if each entry in the header is in our list
+            # for c in header:
+            #     if c not in BinanceCrawlerParser._COLUMNS:
+            # otherwise, rise an exception that the parser is out of date
+            raise ParserOutdatedError(
+                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
 
         return [self.convert(row, header) for row in csv_content]
 
@@ -232,13 +237,13 @@ class BinanceCrawlerParser(TradeHistoryParser):
             CryptoTransaction:  The row converted into a CryptoTransaction
 
         """
-        assert (len(row) == ĺen(header)), 'Each column must have an entry in the header!'
+        assert len(row) == len(header), 'Each column must have an entry in the header!'
         assert isinstance(row, list), 'The row should be a list'
         assert isinstance(header, list), 'The header should be list'
 
         row_ = TradeHistoryParser.Row(row=row, header=header)
 
-        base, quota = _market_to_trading_pair(row_[BinanceCrawlerParser._COLUMN_SYMBOL])
+        base, quota = row_[cls._COLUMN_BASE_ASSET], row_[cls._COLUMN_QUOTE_ASSET]
 
         return CryptoTransaction(
             datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerParser._COLUMN_TIME] / 1000),
