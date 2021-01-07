@@ -210,8 +210,22 @@ class BinanceConnection(object):
 
         return result['data']
 
-    def _get_exchanges(self, symbol=None, type=Exchange.DEPOSIT.value):
+    def _get_intervals(self, start: datetime.datetime, end: datetime.datetime):
+        """Split up the interval into equally-sized parts
+
+        Args:
+            start (datetime.datetime): The start time
+            end (datetime.datetime): The end time
+
+        Returns:
+            Tuple[List, List: The lists of start and end times 
         """
+
+        dates = pd.date_range(start, end, freq='4W')
+
+        # ensure the last date is not after the specified end date
+        return dates[:-1], [*dates[1:-1], end]
+
         Retrieve the deposits or withdrawals.
 
         Args:
