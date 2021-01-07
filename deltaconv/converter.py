@@ -16,51 +16,39 @@ import argparse
 import logging
 import sys
 
-from deltaconv.parser.binance import BinanceTradeParser, BinanceCrawlerTradeParser, BinanceCrawlerDepositParser, \
-    BinanceDepositParser
+from deltaconv.parser.binance import BinanceTradeParser, BinanceCrawlerTradeParser, BinanceCrawlerDepositParser, BinanceDepositParser
 from deltaconv.parser.bitpanda import BitpandaParser
 from deltaconv.parser.delta import DeltaParser
 from deltaconv.parser.parser import ParserOutdatedError
 
 PARSER = {
     'binance-trades': {
-        'parser': BinanceTradeParser,
-        'config': {
+        'parser': BinanceTradeParser, 'config': {
             'delimiter': ",",
         }
     },
-
     'binance-deposit': {
-        'parser': BinanceDepositParser,
-        'config': {
+        'parser': BinanceDepositParser, 'config': {
             'delimiter': ",",
         }
     },
-
     'delta': {
-        'parser': DeltaParser,
-        'config': {
+        'parser': DeltaParser, 'config': {
             'delimiter': ',',
         }
     },
-
     'binancecrawler-trades': {
-        'parser': BinanceCrawlerTradeParser,
-        'config': {
+        'parser': BinanceCrawlerTradeParser, 'config': {
             'delimiter': ';',
         }
     },
-
     'binancecrawler-deposit': {
-        'parser': BinanceCrawlerDepositParser,
-        'config': {
+        'parser': BinanceCrawlerDepositParser, 'config': {
             'delimiter': ';',
         }
     },
-
     'bitpanda': {
-        'parser': BitpandaParser,
-        'config': {
+        'parser': BitpandaParser, 'config': {
             'delimiter': ','
         }
     }
@@ -74,16 +62,22 @@ def parse_arguments():
     """Parses the arguments the user passed to this script """
 
     # parse parameter
-    arg_parser = argparse.ArgumentParser(description='''
+    arg_parser = argparse.ArgumentParser(
+        description='''
             This tool parses a range of CSV|XLSX files into other CSV|XLSX file formats, e.g. Delta, Bitpanda or 
-            Binance.''')
+            Binance.'''
+    )
 
     arg_parser.add_argument('--file', help="The csv file", required=True)
 
     arg_parser.add_argument('--format', help="The output transaction format.", required=True, choices=PARSER.keys())
 
-    arg_parser.add_argument('--output', help="The name of the file to save the transactions into without extension.",
-                            required=False, default=None)
+    arg_parser.add_argument(
+        '--output',
+        help="The name of the file to save the transactions into without extension.",
+        required=False,
+        default=None
+    )
 
     return arg_parser.parse_args()
 
@@ -110,9 +104,7 @@ if __name__ == "__main__":
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(
-        screenhandler
-    )
+    logger.addHandler(screenhandler)
 
     transaction_list = []
     parser = None

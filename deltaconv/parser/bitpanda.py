@@ -77,19 +77,22 @@ class BitpandaParser(TradeHistoryParser):
             if row_[self._COLUMN_TYPE] in ['buy', 'sell']:
                 # only process buy and sells
 
-                transactions.append(CryptoTransaction(
-                    datetime=row_[self._COLUMN_DATE],
-                    trading_pair=(Position(amount=row_[self._COLUMN_FIAT_AMOUNT], currency=row_[self._COLUMN_FIAT]),
-                                  Position(amount=row_[self._COLUMN_CRYPTO_AMOUNT],
-                                           currency=row_[self._COLUMN_CRYPTO])),
-                    trading_type=row_[self._COLUMN_TYPE],
+                transactions.append(
+                    CryptoTransaction(
+                        datetime=row_[self._COLUMN_DATE],
+                        trading_pair=(
+                            Position(amount=row_[self._COLUMN_FIAT_AMOUNT], currency=row_[self._COLUMN_FIAT]),
+                            Position(amount=row_[self._COLUMN_CRYPTO_AMOUNT], currency=row_[self._COLUMN_CRYPTO])
+                        ),
+                        trading_type=row_[self._COLUMN_TYPE],
 
-                    # calculate the price based on the amount of fiat used to buy a certain amount of cryptocoins
-                    price=row_[self._COLUMN_FIAT_AMOUNT] / row_[self._COLUMN_CRYPTO_AMOUNT],
+                # calculate the price based on the amount of fiat used to buy a certain amount of cryptocoins
+                        price=row_[self._COLUMN_FIAT_AMOUNT] / row_[self._COLUMN_CRYPTO_AMOUNT],
 
-                    # we actually cannot calculate the fee using the data provided by bitpanda
-                    fee=Fee(0, row_[self._COLUMN_FIAT]),
-                    exchange="Bitpanda"
-                ))
+                # we actually cannot calculate the fee using the data provided by bitpanda
+                        fee=Fee(0, row_[self._COLUMN_FIAT]),
+                        exchange="Bitpanda"
+                    )
+                )
 
         return transactions
