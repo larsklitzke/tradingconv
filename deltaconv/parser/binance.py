@@ -385,7 +385,6 @@ class BinanceCrawlerTradeParser(TradeHistoryParser):
     _COLUMN_REALPnl = 'realPnl'
     _COLUMN_QUOTE_ASSET = 'quoteAsset'
     _COLUMN_BASE_ASSET = 'baseAsset'
-    _COLUMN_ID = 'id'
     _COLUMN_FEE = 'fee'
     _COLUMN_PRICE = 'price'
     _COLUMN_ACTIVE_BUY = 'activeBuy'
