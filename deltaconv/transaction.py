@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2018 by Lars Klitzke, Lars.Klitzke@gmail.com
+# Copyright (c) 2016-2019 by Lars Klitzke, Lars.Klitzke@gmail.com
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -268,3 +268,66 @@ class CryptoTransaction(Transaction):
 
         """
         return self._exchange
+
+
+class Deposit(Position):
+    """
+    A Deposit is a special kind of position.
+    """
+
+    def __init__(self, timestamp, address, txid, exchange, coin, amount, fee, status):
+        """
+
+        Args:
+            timestamp (datetime.datetime):  The transaction timestamp.
+            address (str):                  The address of the wallet
+            txid (str):                     The transaction id
+            exchange (str):                 The name of the exchange
+            coin (str):                     The name of the coin
+            amount (float):                 The amount of coin transferred
+            fee (Fee):                      The transaction fee
+            status (str):                   The status of the transaction
+        """
+        super().__init__(amount=amount, currency=coin)
+
+        self._timestamp = timestamp
+        self._address = address
+        self._txid = txid
+        self._exchange = exchange
+        self._transactionfee = fee
+        self._status = status
+
+    @property
+    def timestamp(self):
+        return self._timestamp
+
+    @property
+    def address(self):
+        return self._address
+
+    @property
+    def txid(self):
+        return self._txid
+
+    @property
+    def exchange(self):
+        return self._exchange
+
+    @property
+    def transactionfee(self):
+        return self._transactionfee
+
+    @property
+    def status(self):
+        return "Completed" if self._status == 1 else ""
+
+    def __repr__(self):
+        return ", ".join([self.timestamp,
+                          self.exchange,
+                          self.txid,
+                          self.address,
+                          self.currency,
+                          self.status,
+                          str(self.amount),
+                          self.transactionfee.currency,
+                          str(self.transactionfee.amount)])
