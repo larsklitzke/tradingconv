@@ -96,21 +96,35 @@ The following source formats are supported:
 
 * bitpanda: From the export function of the Bitpanda website
 * binance: From the export function on the Binance website
-* binancecrawler: The csv file created by `binancecrawler`
+* binancecrawler: The csv file(s) created by `binancecrawler`
 
 The following output formats are supported:
 
-* binance: The xlsx format used by Binance.
+* binance-trades: The xlsx format used by Binance for trades.
+* binance-deposit: The xlsx format used by Binance for deposits.
 * delta: The csv file format used by Delta.
 
 More formats may supported in the future.
 
-So, to convert the full trade history exported by `binancecrawler` to the delta format, simply call:
+So, to convert the full trading history exported by `binancecrawler` to the delta format, simply call
 
-```
-tradingconv --format delta --file full_trade_file.csv --output delta_trades.csv
+```bash
+tradingconv --format delta \
+            --file binance_trades.csv \
+            --output delta_trades.csv
 ```
 
+or to the original binance format to import them into your portfolio tracking platform (e.g., CoinTracking) with
+
+```bash
+tradingconv --format binance \
+            --file binance_trades.csv \
+            --output binance_trades
+```
+The result is a `xlsx` with the same format as provided by Binance.
+
+> Note that there is no need to specify the format of the source file. `tradingconv` will search for the correct parser 
+> based on the columns in the file.
 
 ## Thanks
 If you like this tool, donate some bugs 💸 for a drink or two at the ETH-Wallet *0xbbf40ba9f8de33061ebd9eecafc0c4b2081ad14f*
