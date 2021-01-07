@@ -272,9 +272,7 @@ class BinanceConnection(object):
 
         result = json.loads(r.text)['data']
 
-        logging.info('Found %d transactions', len(result))
-
-        return result['data']
+        return result
 
     def _get_exchanges(self, start: datetime.datetime, end: datetime.datetime, type, symbol=None):
         """
