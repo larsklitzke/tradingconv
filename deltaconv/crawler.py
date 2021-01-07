@@ -32,10 +32,8 @@ class Mode(Enum):
 
 # A list of available run modes
 MODES = {
-    Mode.TRADING.value: None,
-    Mode.DEPOSIT.value: None,
-    Mode.WITHDRAWAL.value: None
-}  # type: dict[str, Callable]
+    Mode.TRADING.value: None, Mode.DEPOSIT.value: None, Mode.WITHDRAWAL.value: None
+}    # type: dict[str, Callable]
 
 
 def fetch_trades(connection, arguments):
@@ -79,7 +77,23 @@ def fetch_deposits(connection, arguments):
     Returns:
         list[dict]: A list of deposits
     """
-    return connection.deposits()
+    try:
+        start_date = datetime.datetime.strptime(arguments.start, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        raise ValueError('The given start time format is wrong. Format YYYY-MM-DD HH:MM:SS is required.')
+
+    if not isinstance(arguments.end, datetime.datetime):
+        try:
+            end_date = datetime.datetime.strptime(arguments.end, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            raise ValueError('The given end time format is wrong. Format YYYY-MM-DD HH:MM:SS is required.')
+    else:
+        end_date = arguments.end
+
+    return connection.deposits(
+        start=start_date,
+        end=end_date,
+    )
 
 
 def fetch_withdrawals(connection, arguments):
@@ -93,22 +107,41 @@ def fetch_withdrawals(connection, arguments):
     Returns:
         list[dict]: A list of withdrawals
     """
-    return connection.withdrawals()
+    try:
+        start_date = datetime.datetime.strptime(arguments.start, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        raise ValueError('The given start time format is wrong. Format YYYY-MM-DD HH:MM:SS is required.')
+
+    if not isinstance(arguments.end, datetime.datetime):
+        try:
+            end_date = datetime.datetime.strptime(arguments.end, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            raise ValueError('The given end time format is wrong. Format YYYY-MM-DD HH:MM:SS is required.')
+    else:
+        end_date = arguments.end
+
+    return connection.withdrawals(start=start_date, end=end_date)
 
 
 def parse_arguments():
     """Parses the arguments the user passed to this script """
 
     # parse parameter
-    arg_parser = argparse.ArgumentParser(description="""
+    arg_parser = argparse.ArgumentParser(
+        description="""
             BinanceCrawler can be used to retrieve detailed trading information of the cryptocurrency platform
             Binance without being restricted by the API provided by Binance. 
             
             This tool circumvent the trade history restriction of Binance, due to which only the trade history 
-            for a three month interval can be exported.""")
+            for a three month interval can be exported."""
+    )
 
-    arg_parser.add_argument('--cookies', help='A file containing the cookies for a Binance session.', required=True,
-                            type=argparse.FileType('rt'))
+    arg_parser.add_argument(
+        '--cookies',
+        help='A file containing the cookies for a Binance session.',
+        required=True,
+        type=argparse.FileType('rt')
+    )
 
     arg_parser.add_argument('--token', help='The csrftoken in the HTTP header.', required=True)
 
@@ -120,8 +153,13 @@ def parse_arguments():
 
     group.add_argument('--start', help='The start datetime of the query interval in format YYYY-MM-DD HH:MM:SS')
 
-    group.add_argument('--end', help='The end datetime of the query interval. If not specified, the current date '
-                                     'will be used', required=False, default=datetime.datetime.now())
+    group.add_argument(
+        '--end',
+        help='The end datetime of the query interval. If not specified, the current date '
+        'will be used',
+        required=False,
+        default=datetime.datetime.now()
+    )
 
     args = arg_parser.parse_args()
 
@@ -138,24 +176,35 @@ class BinanceConnection(object):
     _MAX_TRADE_QUERY_COUNT = 1000
 
     class Exchange(Enum):
-        DEPOSIT = 0
-        WITHDRAWAL = 1
+        DEPOSIT = "deposit"
+        WITHDRAWAL = "withdraw"
 
     def __init__(self, csrftoken, cookies):
         super().__init__()
 
         self._headers = {
-            'authority': 'www.binance.com',
-            'dnt' : "1",
-            'csrftoken': '{}'.format(csrftoken),
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
-            'content-type': 'application/json',
-            'lang': 'en',
-            'clienttype': 'web',
-            'accept': '*/*',
-            'origin': 'https://www.binance.com',
-            'referer' : 'https://www.binance.com/en/my/orders/exchange/usertrade',
-            'accept-language': 'en-US,en;q=0.9,de;q=0.8'
+            'authority':
+                'www.binance.com',
+            'dnt':
+                "1",
+            'csrftoken':
+                '{}'.format(csrftoken),
+            'user-agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+            'content-type':
+                'application/json',
+            'lang':
+                'en',
+            'clienttype':
+                'web',
+            'accept':
+                '*/*',
+            'origin':
+                'https://www.binance.com',
+            'referer':
+                'https://www.binance.com/en/my/orders/exchange/usertrade',
+            'accept-language':
+                'en-US,en;q=0.9,de;q=0.8'
         }
 
         self._cookies = {}
@@ -168,7 +217,23 @@ class BinanceConnection(object):
 
             self._cookies[name] = value.strip()
 
-    def _get_trades(self, start, end, type=None):
+    def _get_intervals(self, start: datetime.datetime, end: datetime.datetime):
+        """Split up the interval into equally-sized parts
+
+        Args:
+            start (datetime.datetime): The start time
+            end (datetime.datetime): The end time
+
+        Returns:
+            Tuple[List, List: The lists of start and end times 
+        """
+
+        dates = pd.date_range(start, end, freq='4W')
+
+        # ensure the last date is not after the specified end date
+        return dates[:-1], [*dates[1:-1], end]
+
+    def _get_trades(self, start: datetime.datetime, end: datetime.datetime, type=None):
         """
         Retrieve the trades between `start` and `end`.
 
@@ -189,14 +254,13 @@ class BinanceConnection(object):
             'endTime': int(end.timestamp()) * 1000,
             'page': 1,
 
-            # take care of choosing this value - binance may reach out to you if you
-            # set this value too high :P
+        # take care of choosing this value - binance may reach out to you if you
+        # set this value too high :P
             'rows': self._MAX_TRADE_QUERY_COUNT,
-
             'direction': '' if type is None else type,
             'baseAsset': '',
             'quoteAsset': '',
-            'hideCancel' : 'false'
+            'hideCancel': 'false'
         }
 
         r = requests.post(
@@ -206,58 +270,67 @@ class BinanceConnection(object):
             cookies=self._cookies
         )
 
-        result = json.loads(r.text)
+        result = json.loads(r.text)['data']
+
+        logging.info('Found %d transactions', len(result))
 
         return result['data']
 
-    def _get_intervals(self, start: datetime.datetime, end: datetime.datetime):
-        """Split up the interval into equally-sized parts
-
-        Args:
-            start (datetime.datetime): The start time
-            end (datetime.datetime): The end time
-
-        Returns:
-            Tuple[List, List: The lists of start and end times 
+    def _get_exchanges(self, start: datetime.datetime, end: datetime.datetime, type, symbol=None):
         """
-
-        dates = pd.date_range(start, end, freq='4W')
-
-        # ensure the last date is not after the specified end date
-        return dates[:-1], [*dates[1:-1], end]
-
         Retrieve the deposits or withdrawals.
 
         Args:
-            symbol (str):       The symbol to query, e.g. ETH, ADA, etc.
-            type (Exchange):    The type of exchange; DEPOSIT or WITHDRAWAL.
+            start (datetime.datetime):  The start date
+            end (datetime.datetime):    Date of last transaction
+            symbol (str):               The symbol to query, e.g. ETH, ADA, etc.
+            type (Exchange):            The type of exchange; DEPOSIT or WITHDRAWAL.
 
         Returns:
             tuple[int, dict]:   A tuple with the number of pages and the data of the specified page
 
         """
+        logging.info(f'Get {type}(s) from %s to %s', start, end)
 
         post_data = {
+            'startTime': int(start.timestamp()) * 1000,
+            'endTime': int(end.timestamp()) * 1000,
+            'page': {
+                'offset': 0, 'limit': self._MAX_TRADE_QUERY_COUNT
+            },
             'coin': '' if symbol is None else symbol,
-            'direction': type,
-            # take care of choosing this value - binance may reach out to you if you
-            # set this value too high :P
-            'rows': 0,
-            'page': 1,
-            'status': '',
+            'statusArray': [],
+            'txId': '',
         }
 
         r = requests.post(
-            url='https://www.binance.com/user/getMoneyLog.html',
+            url=f'https://www.binance.com/gateway-api/v1/private/capital/{type}/list',
             headers=self._headers,
-            allow_redirects=True,
-            data=post_data,
+            data=json.dumps(post_data),
             cookies=self._cookies
         )
 
-        result = json.loads(r.text)
+        result = json.loads(r.text)['data']['rows']
 
-        return result['pages'], result['data']
+        logging.info('Found %d transactions', len(result))
+
+        return result
+
+    def _query(self, start: datetime.datetime, end: datetime.datetime, func, *args, **kwargs):
+
+        trades = []
+
+        # ensure the last date is not after the specified end date
+        for t_start, t_end in zip(*self._get_intervals(start, end)):
+            try:
+                t_trades = func(t_start, t_end, *args, **kwargs)
+
+                if t_trades is not None:
+                    trades.extend(t_trades)
+            except JSONDecodeError:
+                pass
+
+        return trades
 
     def trades(self, start, end, **kwargs):
         """
@@ -273,27 +346,15 @@ class BinanceConnection(object):
             list: A list of `Transaction`s
 
         """
-        # since Binance only allows to retrieve three month in one query, we have to split up the request
-        dates = pd.date_range(start, end, freq = '4W')
+        return self._query(start, end, self._get_trades, **kwargs)
 
-        trades = []
-
-        # ensure the last date is not after the specified end date
-        for t_start, t_end in zip(dates[:-1], [*dates[1:-1], end]):
-            try:
-                t_trades = self._get_trades(t_start, t_end, **kwargs)
-
-                if t_trades is not None:
-                    trades.extend(t_trades)
-            except JSONDecodeError:
-                pass    
-        return trades
-
-    def deposits(self, **kwargs):
+    def deposits(self, start: datetime.datetime, end: datetime.datetime, **kwargs):
         """
         Get all deposits.
 
         Args:
+            start (datetime.datetime):   The start date
+            end (datetime.datetime):     Date of last transaction
             **kwargs:
 
         Returns:
@@ -301,14 +362,9 @@ class BinanceConnection(object):
 
         """
 
-        logging.info('Get all deposits')
+        return self._query(start, end, self._get_exchanges, type=self.Exchange.DEPOSIT.value, **kwargs)
 
-        _, result = self._get_exchanges(type=self.Exchange.DEPOSIT.value, **kwargs)
-
-        logging.info('Found %d transactions', len(result))
-        return result
-
-    def withdrawals(self, **kwargs):
+    def withdrawals(self, start: datetime.datetime, end: datetime.datetime, **kwargs):
         """
         Get all withdrawals.
 
@@ -319,14 +375,7 @@ class BinanceConnection(object):
             list[dict[str:any]]: A list transactions
 
         """
-
-        logging.info('Get all withdrawals')
-
-        _, result = self._get_exchanges(type=self.Exchange.WITHDRAWAL.value, **kwargs)
-
-        logging.info('Found %d transactions', len(result))
-
-        return result
+        return self._query(start, end, self._get_exchanges, type=self.Exchange.WITHDRAWAL.value, **kwargs)
 
 
 def main(arguments):
@@ -362,8 +411,6 @@ if __name__ == '__main__':
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(
-        screenhandler
-    )
+    logger.addHandler(screenhandler)
 
     main(args)
