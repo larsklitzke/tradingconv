@@ -156,8 +156,8 @@ The result is a `xlsx` with the same format as provided by Binance.
 > based on the columns in the file.
 
 ## Thanks
-If you like this tool, donate some bugs 💸 for a drink or two at the ETH-Wallet *0xbbf40ba9f8de33061ebd9eecafc0c4b2081ad14f*
-or via [PayPal](https://www.paypal.me/LarsKlitzke). Cheers 🍻!
+If you like this tools, donate some bugs 💸 for a drink or two via [PayPal](https://paypal.me/pools/c/8vQM2aoPHx). 
+Cheers 🍻!
 
 ## License
 
