@@ -114,15 +114,19 @@ class BinanceTradeParser(TradeHistoryParser):
                 row_[self._COLUMN_DATE] = datetime.datetime.strptime(row_[self._COLUMN_DATE], "%d.%m.%y %H:%M")
 
             # convert the row to a transaction
-            transactions.append(CryptoTransaction(
-                datetime=row_[self._COLUMN_DATE],
-                trading_pair=(Position(amount=row_[self._COLUMN_TOTAL], currency=quota),
-                              Position(amount=row_[self._COLUMN_COIN_AMOUNT], currency=base)),
-                trading_type=row_[self._COLUMN_TYPE],
-                price=row_[self._COLUMN_PRICE],
-                fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN]),
-                exchange="Binance"
-            ))
+            transactions.append(
+                CryptoTransaction(
+                    datetime=row_[self._COLUMN_DATE],
+                    trading_pair=(
+                        Position(amount=row_[self._COLUMN_TOTAL], currency=quota),
+                        Position(amount=row_[self._COLUMN_COIN_AMOUNT], currency=base)
+                    ),
+                    trading_type=row_[self._COLUMN_TYPE],
+                    price=row_[self._COLUMN_PRICE],
+                    fee=Fee(row_[self._COLUMN_FEE], row_[self._COLUMN_FEE_COIN]),
+                    exchange="Binance"
+                )
+            )
 
         return transactions
 
@@ -144,9 +148,7 @@ class BinanceTradeParser(TradeHistoryParser):
 
             values = {
                 self._COLUMN_DATE: t.datetime.strftime("%Y-%m-%d %H:%M:%S"),
-
-                self._COLUMN_MARKET: "{}{}".format(t.trading_pair[1].currency.upper(),
-                                                   t.trading_pair[0].currency),
+                self._COLUMN_MARKET: "{}{}".format(t.trading_pair[1].currency.upper(), t.trading_pair[0].currency),
                 self._COLUMN_TYPE: t.type.upper(),
                 self._COLUMN_PRICE: t.price,
                 self._COLUMN_COIN_AMOUNT: t.trading_pair[1].amount,
@@ -251,7 +253,6 @@ class BinanceDepositParser(TradeHistoryParser):
 
             values = {
                 self._COLUMN_DATE: d.timestamp.strftime("%Y-%m-%d %H-%M-%S"),
-
                 self._COLUMN_COIN: d.currency,
                 self._COLUMN_AMOUNT: d.amount,
                 self._COLUMN_TRANSACTIONFEE: d.transactionfee.amount,
@@ -331,7 +332,8 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
             # check if each entry in the header is in our list
             # otherwise, rise an exception that the parser is out of date
             raise ParserOutdatedError(
-                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
+                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns)
+            )
 
         return [self.convert(row, header) for row in csv_content]
 
@@ -400,7 +402,6 @@ class BinanceCrawlerTradeParser(TradeHistoryParser):
         _COLUMN_REALPnl,
         _COLUMN_QUOTE_ASSET,
         _COLUMN_BASE_ASSET,
-        _COLUMN_ID,
         _COLUMN_FEE,
         _COLUMN_PRICE,
         _COLUMN_ACTIVE_BUY,
@@ -422,7 +423,8 @@ class BinanceCrawlerTradeParser(TradeHistoryParser):
             #     if c not in BinanceCrawlerTradeParser._COLUMNS:
             # otherwise, rise an exception that the parser is out of date
             raise ParserOutdatedError(
-                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns))
+                'The columns {} are unknown. The parser has to be updated!'.format(missing_columns)
+            )
 
         return [self.convert(row, header) for row in csv_content]
 
@@ -452,8 +454,10 @@ class BinanceCrawlerTradeParser(TradeHistoryParser):
 
         return CryptoTransaction(
             datetime=datetime.datetime.utcfromtimestamp(row_[BinanceCrawlerTradeParser._COLUMN_TIME] / 1000),
-            trading_pair=(Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_TOTAL_QUOTA], currency=quota),
-                          Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_QUANTITY], currency=base)),
+            trading_pair=(
+                Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_TOTAL_QUOTA], currency=quota),
+                Position(amount=row_[BinanceCrawlerTradeParser._COLUMN_QUANTITY], currency=base)
+            ),
             trading_type=row_[BinanceCrawlerTradeParser._COLUMN_SIDE],
             price=row_[BinanceCrawlerTradeParser._COLUMN_PRICE],
             fee=Fee(row_[BinanceCrawlerTradeParser._COLUMN_FEE], row_[BinanceCrawlerTradeParser._COLUMN_FEE_COIN]),
