@@ -131,36 +131,26 @@ class BinanceConnection(object):
             start (datetime.datetime):   The start date
             end (datetime.datetime):     Date of last transaction
             **kwargs:
-                symbol (str):   The symbol to query, e.g. ETH, ADA, etc.
                 type (str):     The type of transaction; 'BUY' or 'SELL'
 
         Returns:
             list: A list of `Transaction`s
 
         """
-
         # since Binance only allows to retrieve three month in one query, we have to split up the request
-        start_interval = start.replace(second=0, minute=0, hour=0, microsecond=0)
-
-        # use 28 days to be save for all month
-        end_interval = start_interval + datetime.timedelta(days=28)
+        dates = pd.date_range(start, end, freq = '4W')
 
         trades = []
 
-        while end_interval < end:
-            _, result = self._get_trades(start_interval, end_interval, **kwargs)
+        # ensure the last date is not after the specified end date
+        for t_start, t_end in zip(dates[:-1], [*dates[1:-1], end]):
+            try:
+                t_trades = self._get_trades(t_start, t_end, **kwargs)
 
-            trades.extend(result)
-
-            start_interval = end_interval
-            end_interval = start_interval + datetime.timedelta(days=28)
-
-        # handle the last query since the interval should always overlap the full trading interval
-
-        _, result = self._get_trades(start_interval, end, **kwargs)
-
-        trades.extend(result)
-
+                if t_trades is not None:
+                    trades.extend(t_trades)
+            except JSONDecodeError:
+                pass    
         return trades
 
 
