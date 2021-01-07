@@ -21,10 +21,10 @@ pip install tradingconv
 
 This package comes equipped with multiple tools. Here is a list of currently available tools.
 
-| Command          |  Description                                                 |
-| -----------------| -------------------------------------------------------------|
-| binancecrawler   | Query Binance to export the **full** trade history   |
-| tradingconv      | Convert supported (csv,xlsx) files into other supported formats |
+| Command        | Description                                                     |
+| -------------- | --------------------------------------------------------------- |
+| binancecrawler | Query Binance to export the **full** trade history              |
+| tradingconv    | Convert supported (csv,xlsx) files into other supported formats |
 
 
 
@@ -74,20 +74,49 @@ for an entry `getUserLoginLog.html`. You'll find the `csrftoken` in the header o
 
 ![Image for retrieving the csrftoken](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/csrftoken_readout.jpg)
 
-### Retrieve trade history
+### Retrieve transaction history from binance
 
-Now you can query Binance to retrieve your trade history within a specific inverval with
+You can now use `binancecrawler` to get trades in a certain interval with
 
+```bash
+binancecrawler --cookies <cookie_file> \
+               --token <csrftoken> \
+               --start "2018-01-01 00:00:00"\
+               --end "2018-01-02 00:00:00"\
+               --output binance_trades.csv \
+               --mode trade
 ```
-binancecrawler --cookies <cookie_file> --token <csrftoken> --start "2018-01-01 00:00:00" --end "2018-01-02 00:00:00" --output trade_file.csv
+
+or the full history by passing a start some time ago your account creation. 
+
+```bash
+binancecrawler --cookies <cookie_file> \
+               --token <csrftoken> \
+               --start "2018-01-01 00:00:00" \
+               --output binance_trades.csv \
+               --mode trading
 ```
 
-or simply the full history by passing a start some time ago your account creation. 
+For platforms such as [CoinTracking](https://cointracking.info/) you can also export all your deposits or withdrawals
+from Binance by just changing the `mode`. For all deposits, run the following
 
-```
-binancecrawler --cookies <cookie_file> --token <csrftoken> --start "2000-01-01 00:00:00" --output full_trade_file.csv
+```bash
+binancecrawler --cookies <cookie_file> \
+               --token <csrftoken> \
+               --start "2018-01-01 00:00:00" \
+               --output binance_deposits.csv \
+               --mode deposit
 ```
 
+and for all withdrawals
+
+```bash
+binancecrawler --cookies <cookie_file> \
+               --token <csrftoken> \
+               --start "2018-01-01 00:00:00" \
+               --output binance_withdrawals.csv \
+               --mode withdrawal
+```
 ## Convert to other formats
 
 To finally convert csv or xlxs files to the other csv or xlsx format, `tradingconv` does the trick.
