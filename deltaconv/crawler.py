@@ -57,18 +57,17 @@ class BinanceConnection(object):
         super().__init__()
 
         self._headers = {
-            'origin': 'https://www.binance.com',
-            'accept-encoding': 'gzip',
-            'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8,de;q=0.7',
-            'lang': 'en',
-            'pragma': 'no-cache',
-            'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Mobile Safari/537.36',
-            'accept': '*/*',
-            'cache-control': 'no-cache',
             'authority': 'www.binance.com',
-            'dnt': '1',
-            'clienttype': 'web',
+            'dnt' : "1",
             'csrftoken': '{}'.format(csrftoken),
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+            'content-type': 'application/json',
+            'lang': 'en',
+            'clienttype': 'web',
+            'accept': '*/*',
+            'origin': 'https://www.binance.com',
+            'referer' : 'https://www.binance.com/en/my/orders/exchange/usertrade',
+            'accept-language': 'en-US,en;q=0.9,de;q=0.8'
         }
 
         self._cookies = {}
