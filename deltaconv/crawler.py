@@ -80,7 +80,7 @@ class BinanceConnection(object):
 
             self._cookies[name] = value.strip()
 
-    def _get_trades(self, start, end, symbol=None, type=None):
+    def _get_trades(self, start, end, type=None):
         """
         Retrieve the trades between `start` and `end`.
 
@@ -88,41 +88,40 @@ class BinanceConnection(object):
             page (int|str):             The page number
             start (datetime.datetime):  The start date
             end (datetime.datetime):    Date of last transaction
-            symbol (str):               The symbol to query, e.g. ETH, ADA, etc.
             type (str):                 The type of transaction; 'BUY' or 'SELL'
 
         Returns:
-            tuple[int, dict]:           A tuple with the number of pages and the data of the specified page
+            dict:           All records within that interval
 
         """
 
         logging.info('Get trades from %s to %s', start, end)
 
         post_data = {
-            'start': int(start.timestamp()) * 1000,
-            'end': int(end.timestamp()) * 1000,
+            'startTime': int(start.timestamp()) * 1000,
+            'endTime': int(end.timestamp()) * 1000,
+            'page': 1,
 
             # take care of choosing this value - binance may reach out to you if you
             # set this value too high :P
-            'rows': str(self._MAX_TRADE_QUERY_COUNT),
+            'rows': self._MAX_TRADE_QUERY_COUNT,
 
             'direction': '' if type is None else type,
             'baseAsset': '',
             'quoteAsset': '',
-            'symbol': '' if symbol is None else symbol,
+            'hideCancel' : 'false'
         }
 
         r = requests.post(
-            url='https://www.binance.com/exchange/private/userTrades',
+            url='https://www.binance.com/exchange-api/v1/private/streamer/trade/get-user-trades',
             headers=self._headers,
-            allow_redirects=True,
-            data=post_data,
+            data=json.dumps(post_data),
             cookies=self._cookies
         )
 
         result = json.loads(r.text)
 
-        return result['pages'], result['data']
+        return result['data']
 
     def trades(self, start, end, **kwargs):
         """
