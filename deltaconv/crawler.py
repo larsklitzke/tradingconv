@@ -17,8 +17,10 @@ import json
 import logging
 import sys
 from enum import Enum
+from json.decoder import JSONDecodeError
 from typing import Callable
 
+import pandas as pd
 import requests
 
 
@@ -143,18 +145,17 @@ class BinanceConnection(object):
         super().__init__()
 
         self._headers = {
-            'origin': 'https://www.binance.com',
-            'accept-encoding': 'gzip',
-            'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8,de;q=0.7',
-            'lang': 'en',
-            'pragma': 'no-cache',
-            'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Mobile Safari/537.36',
-            'accept': '*/*',
-            'cache-control': 'no-cache',
             'authority': 'www.binance.com',
-            'dnt': '1',
-            'clienttype': 'web',
+            'dnt' : "1",
             'csrftoken': '{}'.format(csrftoken),
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+            'content-type': 'application/json',
+            'lang': 'en',
+            'clienttype': 'web',
+            'accept': '*/*',
+            'origin': 'https://www.binance.com',
+            'referer' : 'https://www.binance.com/en/my/orders/exchange/usertrade',
+            'accept-language': 'en-US,en;q=0.9,de;q=0.8'
         }
 
         self._cookies = {}
@@ -167,48 +168,47 @@ class BinanceConnection(object):
 
             self._cookies[name] = value.strip()
 
-    def _get_trades(self, start, end, symbol=None, type=None):
+    def _get_trades(self, start, end, type=None):
         """
         Retrieve the trades between `start` and `end`.
 
         Args:
             start (datetime.datetime):  The start date
             end (datetime.datetime):    Date of last transaction
-            symbol (str):               The symbol to query, e.g. ETH, ADA, etc.
             type (str):                 The type of transaction; 'BUY' or 'SELL'
 
         Returns:
-            tuple[int, dict]:           A tuple with the number of pages and the data of the specified page
+            dict:           All records within that interval
 
         """
 
         logging.info('Get trades from %s to %s', start, end)
 
         post_data = {
-            'start': int(start.timestamp()) * 1000,
-            'end': int(end.timestamp()) * 1000,
+            'startTime': int(start.timestamp()) * 1000,
+            'endTime': int(end.timestamp()) * 1000,
+            'page': 1,
 
             # take care of choosing this value - binance may reach out to you if you
             # set this value too high :P
-            'rows': str(self._MAX_TRADE_QUERY_COUNT),
+            'rows': self._MAX_TRADE_QUERY_COUNT,
 
             'direction': '' if type is None else type,
             'baseAsset': '',
             'quoteAsset': '',
-            'symbol': '' if symbol is None else symbol,
+            'hideCancel' : 'false'
         }
 
         r = requests.post(
-            url='https://www.binance.com/exchange/private/userTrades',
+            url='https://www.binance.com/exchange-api/v1/private/streamer/trade/get-user-trades',
             headers=self._headers,
-            allow_redirects=True,
-            data=post_data,
+            data=json.dumps(post_data),
             cookies=self._cookies
         )
 
         result = json.loads(r.text)
 
-        return result['pages'], result['data']
+        return result['data']
 
     def _get_exchanges(self, symbol=None, type=Exchange.DEPOSIT.value):
         """
@@ -253,37 +253,26 @@ class BinanceConnection(object):
             start (datetime.datetime):   The start date
             end (datetime.datetime):     Date of last transaction
             **kwargs:
-                symbol (str):   The symbol to query, e.g. ETH, ADA, etc.
                 type (str):     The type of transaction; 'BUY' or 'SELL'
 
         Returns:
             list: A list of `Transaction`s
 
         """
-
-        logging.info('Get trades from %s to %s', start, end)
-
         # since Binance only allows to retrieve three month in one query, we have to split up the request
-        start_interval = start.replace(second=0, minute=0, hour=0, microsecond=0)
-
-        # use 28 days to be save for all month
-        end_interval = start_interval + datetime.timedelta(days=28)
+        dates = pd.date_range(start, end, freq = '4W')
 
         trades = []
 
-        while end_interval < end:
-            _, result = self._get_trades(start_interval, end_interval, **kwargs)
+        # ensure the last date is not after the specified end date
+        for t_start, t_end in zip(dates[:-1], [*dates[1:-1], end]):
+            try:
+                t_trades = self._get_trades(t_start, t_end, **kwargs)
 
-            trades.extend(result)
-
-            start_interval = end_interval
-            end_interval = start_interval + datetime.timedelta(days=28)
-
-        # handle the last query since the interval should always overlap the full trading interval
-        _, result = self._get_trades(start_interval, end, **kwargs)
-
-        trades.extend(result)
-
+                if t_trades is not None:
+                    trades.extend(t_trades)
+            except JSONDecodeError:
+                pass    
         return trades
 
     def deposits(self, **kwargs):

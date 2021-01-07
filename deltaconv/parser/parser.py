@@ -108,7 +108,7 @@ class TradeHistoryParser(object):
             For xlsx files, it is assumed that the trading info is on the first sheet.
 
         Returns:
-            The content of the file as a list of rows
+            list[list[any]]: The content of the file as a list of rows
         """
 
         if file.endswith('.xlsx'):
