@@ -2,7 +2,7 @@
 
 Are you trading with Cryptocurrencies on [Binance](https://www.binance.com/)? Do you need a tool to manage the different file formats platforms 
 like Binance uses for exporting the trading history, e.g. to import into tax return software or for tracking your 
-portfolie in [delta](https://www.producthunt.com/posts/delta)? 
+portfolie in [delta](https://www.producthunt.com/posts/delta) or [CoinTracking](https://cointracking.info/)? 
 
 This package provide the appropriate tools for handling different formats of trading history files. Furthermore, the 
 Binance API limitation that allows to only export trading history in an three month interval is lifted so that you can
