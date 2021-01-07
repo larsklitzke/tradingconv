@@ -170,7 +170,7 @@ class BinanceDepositParser(TradeHistoryParser):
 
     """
 
-    _COLUMN_DATE = "Date"
+    _COLUMN_DATE = "Date(UTC)"
 
     _COLUMN_COIN = "Coin"
 
@@ -182,7 +182,7 @@ class BinanceDepositParser(TradeHistoryParser):
 
     _COLUMN_TXID = "TXID"
 
-    _COLUMN_SOURCE_ADDRESS = "Source Address"
+    _COLUMN_SOURCE_ADDRESS = "SourceAddress"
 
     _COLUMN_PAYMENT_ID = "PaymentID"
 
@@ -252,7 +252,7 @@ class BinanceDepositParser(TradeHistoryParser):
             row = TradeHistoryParser.Row(self._COLUMNS)
 
             values = {
-                self._COLUMN_DATE: d.timestamp.strftime("%Y-%m-%d %H-%M-%S"),
+                self._COLUMN_DATE: d.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                 self._COLUMN_COIN: d.currency,
                 self._COLUMN_AMOUNT: d.amount,
                 self._COLUMN_TRANSACTIONFEE: d.transactionfee.amount,
@@ -267,7 +267,7 @@ class BinanceDepositParser(TradeHistoryParser):
 
             transactions.append(values)
 
-        self._write_transactions(transactions, "{}.xlsx".format(file))
+        self._write_transactions(transactions=transactions, columns=self._COLUMNS, file="{}.xlsx".format(file))
 
 
 class BinanceCrawlerDepositParser(TradeHistoryParser):
@@ -277,7 +277,6 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
     """
 
     _COLUMN_TXID = "txId"
-    _COLUMN_DIRECTION = "direction"
     _COLUMN_COIN = "coin"
     _COLUMN_CURRENT_CONFIRM_TIMES = "curConfirmTimes"
     _COLUMN_STATUS = "status"
@@ -287,19 +286,14 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
     _COLUMN_USER_ID = "userId"
     _COLUMN_ADDRESS = "address"
     _COLUMN_AMOUNT_TRANSFER = "transferAmount"
-    _COLUMN_URL = "url"
+    _COLUMN_URL = "txUrl"
     _COLUMN_ADDRESS_URL = "addressUrl"
-    _COLUMN_INFO = "info"
     _COLUMN_ADDRESS_TAG = "addressTag"
-    _COLUMN_APPLY_TIME = "applyTime"
+    _COLUMN_APPLY_TIME = "insertTime"
     _COLUMN_STATUS_NAME = "statusName"
-    _COLUMN_DIRECTION_NAME = "directionName"
-    _COLUMN_APPLY_TIME_STR = "applyTimeStr"
-    _COLUMN_TRANSACTION_FEE = "transactionFee"
 
     _COLUMNS = [
         _COLUMN_TXID,
-        _COLUMN_DIRECTION,
         _COLUMN_COIN,
         _COLUMN_CURRENT_CONFIRM_TIMES,
         _COLUMN_STATUS,
@@ -311,13 +305,9 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
         _COLUMN_AMOUNT_TRANSFER,
         _COLUMN_URL,
         _COLUMN_ADDRESS_URL,
-        _COLUMN_INFO,
         _COLUMN_ADDRESS_TAG,
         _COLUMN_APPLY_TIME,
-        _COLUMN_STATUS_NAME,
-        _COLUMN_DIRECTION_NAME,
-        _COLUMN_APPLY_TIME_STR,
-        _COLUMN_TRANSACTION_FEE,
+        _COLUMN_STATUS_NAME
     ]
 
     def parse(self, csv_file):
@@ -360,12 +350,12 @@ class BinanceCrawlerDepositParser(TradeHistoryParser):
         row_ = TradeHistoryParser.Row(row=row, header=header)
 
         return Deposit(
-            timestamp=datetime.datetime.utcfromtimestamp(row_[cls._COLUMN_APPLY_TIME]),
+            timestamp=datetime.datetime.utcfromtimestamp(row_[cls._COLUMN_APPLY_TIME] / 1E3),
             address=row_[cls._COLUMN_ADDRESS],
             txid=row_[cls._COLUMN_TXID],
             coin=row_[cls._COLUMN_COIN],
             amount=row_[cls._COLUMN_AMOUNT_TRANSFER],
-            fee=Fee(amount=row_[cls._COLUMN_TRANSACTION_FEE], currency=""),
+            fee=Fee(amount=0, currency=""),
             status=row_[cls._COLUMN_STATUS],
             exchange="Binance",
         )
