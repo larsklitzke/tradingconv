@@ -312,8 +312,6 @@ class BinanceConnection(object):
 
         result = json.loads(r.text)['data']['rows']
 
-        logging.info('Found %d transactions', len(result))
-
         return result
 
     def _query(self, start: datetime.datetime, end: datetime.datetime, func, *args, **kwargs):
@@ -329,6 +327,8 @@ class BinanceConnection(object):
                     trades.extend(t_trades)
             except JSONDecodeError:
                 pass
+
+        logging.info('Found %d transactions', len(trades))
 
         return trades
 
