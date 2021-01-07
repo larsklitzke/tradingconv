@@ -49,8 +49,7 @@ I've setup a list of links with a description on how to do this for different br
 To the best of my knowledge, the following cookies are currently required in order to gain access to the active
 session:
 
-* JSESSIONID
-* \_\_BINANCE_USER_DEVICE_ID\_\_
+* p20t
 
 Save all of theses variables into a file with only one line in the following format:
 
@@ -63,12 +62,15 @@ var:=<variable>=<value>;
 With ``<value>`` as the value of the variable. A line thus looks like:
 
 ```
-JSESSIONID=<value>;__BINANCE_USER_DEVICE_ID__=<value>
+p20t=<value>
 ```
 
 Finally, we need an additional csrftoken Binance uses for internal queries. You can read this token out by switching to 
 your account page, open the development console of you browser (the one where you've copied the cookies from) and search
-for an entry `getUserLoginLog.html`. You'll find the csrftoken in the header of the message.
+for an entry `getUserLoginLog.html`. You'll find the `csrftoken` in the header of the message.
+
+> Note that with the latest frontend update on Binance, the following image is outdated. Instead of searching for the 
+> `getUserLoginLog.html` you can find the token in `get-open-orders` or any other request on the private Binance API.
 
 ![Image for retrieving the csrftoken](https://raw.githubusercontent.com/larsklitzke/binance2delta/master/doc/csrftoken_readout.jpg)
 
