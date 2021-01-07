@@ -1,0 +1,18 @@
+[style]
+based_on_style = google
+spaces_before_comment = 4
+column_limit = 120
+allow_multiline_dictionary_keys = true
+allow_multiline_lambdas = true
+dedent_closing_brackets =true
+indent_dictionary_value = true
+split_before_dict_set_generator = true
+split_before_logical_operator = true
+split_complex_comprehension = true
+allow_split_before_default_or_named_assigns = true
+allow_split_before_dict_value=true
+coalesce_brackets = true
+force_multiline_dict = true
+join_multiple_lines = false
+split_before_named_assigns = true
+split_all_top_level_comma_separated_values = true
